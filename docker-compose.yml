@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3347:3306"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: pyweb
+      MYSQL_ROOT_HOST: "%"
+    volumes:
+      - mysql-vol:/var/lib/mysql
+    networks:
+      - pyweb-net
+
+  pyweb:
+    image: pyweb:0.1
+    ports:
+      - "3344:3344"
+    restart: always
+    environment:
+      APPLICATION_SETTINGS: '../config/docker.py'
+    networks:
+      - pyweb-net
+
+volumes:
+  mysql-vol:
+    driver: local
+
+networks:
+  pyweb-net:
