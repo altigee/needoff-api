@@ -9,26 +9,28 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: pyweb
+      MYSQL_DATABASE: needoff
       MYSQL_ROOT_HOST: "%"
     volumes:
       - mysql-vol:/var/lib/mysql
     networks:
-      - pyweb-net
+      - needoff-net
 
-  pyweb:
-    image: pyweb:0.1
+  web:
+    image: needoff-api:0.1
     ports:
       - "3344:3344"
     restart: always
     environment:
       APPLICATION_SETTINGS: '../config/docker.py'
     networks:
-      - pyweb-net
+      - needoff-net
+    depends_on:
+      - mysql
 
 volumes:
   mysql-vol:
     driver: local
 
 networks:
-  pyweb-net:
+  needoff-net:
