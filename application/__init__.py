@@ -6,6 +6,8 @@ from application.http.health_controller import health_v1
 from application.workspace.v1_controller import ws_v1
 from application.http import httperrors
 import logging
+import application.balances.models
+import application.http.graphql.resolver as graphql
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -24,3 +26,6 @@ app.register_blueprint(auth_v1)
 app.register_blueprint(health_v1)
 app.register_blueprint(ws_v1)
 app.register_blueprint(httperrors)
+
+graphql.init_graphql(app.config['GRAPHQL_JWT_ENABLED'])
+app.register_blueprint(graphql.graphql_resolver)

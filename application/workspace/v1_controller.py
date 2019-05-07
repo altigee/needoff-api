@@ -2,7 +2,7 @@ import logging
 from flask import Blueprint
 from dataclasses import dataclass
 from utils.http import returns_json, json_convert
-from application.auth.models import UserModel
+from application.auth.models import User as UserModel
 from application.workspace.models import WorkspaceModel, WorkspaceUserModel
 from application.http.models import HttpError
 from application.shared.database import db

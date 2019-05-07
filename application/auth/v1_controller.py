@@ -7,7 +7,7 @@ from flask_jwt_extended import (
     get_jwt_identity,
     get_raw_jwt
 )
-from application.auth.models import UserModel, RevokedTokenModel
+from application.auth.models import User, RevokedToken
 from application.http.models import HttpError, HttpMessage
 from utils.http import returns_json, json_convert
 from flask import Blueprint
@@ -23,13 +23,13 @@ auth_v1.url_prefix = "/v1/auth"
 @returns_json
 @json_convert(to=RegisterRequest)
 def register_v1(request: RegisterRequest):
-    if UserModel.find_by_username(request.username):
+    if User.find_by_username(request.username):
         LOG.warning(f'Repeated registration for {request.username}')
         return HttpError(f'User {request.username} already exists'), 400
 
-    new_user = UserModel(
+    new_user = User(
         username=request.username,
-        password=UserModel.generate_hash(request.password))
+        password=User.generate_hash(request.password))
     new_user.save_to_db()
     access_token = create_access_token(identity=request.username)
     refresh_token = create_refresh_token(identity=request.username)
@@ -40,13 +40,13 @@ def register_v1(request: RegisterRequest):
 @returns_json
 @json_convert(to=LoginRequest)
 def login_v1(request: LoginRequest):
-    current_user = UserModel.find_by_username(request.username)
+    current_user = User.find_by_username(request.username)
 
     if not current_user:
         LOG.warning(f'Non-existing user {request.username} login')
         return HttpError(f"User {request.username} doesn't exist"), 400
 
-    if UserModel.verify_hash(request.password, current_user.password):
+    if User.verify_hash(request.password, current_user.password):
         access_token = create_access_token(identity=request.username)
         refresh_token = create_refresh_token(identity=request.username)
 
@@ -61,7 +61,7 @@ def login_v1(request: LoginRequest):
 @jwt_required
 def logout_access_v1():
     jti = get_raw_jwt()['jti']
-    revoked_token = RevokedTokenModel(jti=jti)
+    revoked_token = RevokedToken(jti=jti)
     revoked_token.add()
     return HttpMessage('Access token has been revoked'), 200
 
@@ -71,7 +71,7 @@ def logout_access_v1():
 @jwt_refresh_token_required
 def logout_refresh_v1():
     jti = get_raw_jwt()['jti']
-    revoked_token = RevokedTokenModel(jti=jti)
+    revoked_token = RevokedToken(jti=jti)
     revoked_token.add()
     return HttpMessage('Refresh token has been revoked'), 200
 

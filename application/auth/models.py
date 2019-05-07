@@ -2,7 +2,7 @@ from passlib.hash import pbkdf2_sha256 as sha256
 from application.shared.database import db
 
 
-class UserModel(db.Model):
+class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -26,7 +26,7 @@ class UserModel(db.Model):
         return sha256.verify(password, password_hash)
 
 
-class RevokedTokenModel(db.Model):
+class RevokedToken(db.Model):
     __tablename__ = 'revoked_token'
     id = db.Column(db.Integer, primary_key=True)
     jti = db.Column(db.String(120))
