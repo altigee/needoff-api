@@ -1,2 +1,2 @@
-SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:1234@mysql:3306/pyweb'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///../db/needoff.db'
 GRAPHQL_JWT_ENABLED = False
