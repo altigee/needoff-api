@@ -1,36 +1,18 @@
 version: '3'
 
 services:
-  mysql:
-    image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
-    ports:
-      - "3347:3306"
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: needoff
-      MYSQL_ROOT_HOST: "%"
-    volumes:
-      - mysql-vol:/var/lib/mysql
-    networks:
-      - needoff-net
-
   web:
-    image: needoff-api:0.1
+    build: .
     ports:
       - "3344:3344"
     restart: always
     environment:
       APPLICATION_SETTINGS: '../config/docker.py'
+    volumes:
+      - .:/app
+      - ./db:/db
     networks:
       - needoff-net
-    depends_on:
-      - mysql
-
-volumes:
-  mysql-vol:
-    driver: local
 
 networks:
   needoff-net:
