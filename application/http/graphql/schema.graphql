@@ -22,30 +22,9 @@ type DayOffConnection {
   edges: [DayOffEdge]!
 }
 
-type DayOffConnectionsConnection {
-  pageInfo: PageInfo!
-  edges: [DayOffConnectionsEdge]!
-}
-
-type DayOffConnectionsEdge {
-  node: DayOff
-  cursor: String!
-}
-
 type DayOffEdge {
   node: DayOff
   cursor: String!
-}
-
-enum DayOffSortEnum {
-  id_asc
-  id_desc
-  user_id_asc
-  user_id_desc
-  approved_by_id_asc
-  approved_by_id_desc
-  day_off_type_asc
-  day_off_type_desc
 }
 
 enum DayOffType {
@@ -71,8 +50,8 @@ type PageInfo {
 
 type Query {
   node(id: ID!): Node
-  allUsers(sort: [UserSortEnum] = [id_asc], before: String, after: String, first: Int, last: Int): UserConnectionsConnection
-  allDaysOff(sort: [DayOffSortEnum] = [id_asc], before: String, after: String, first: Int, last: Int): DayOffConnectionsConnection
+  allUsers(before: String, after: String, first: Int, last: Int): UserConnection
+  allDaysOff(before: String, after: String, first: Int, last: Int): DayOffConnection
 }
 
 type User implements Node {
@@ -82,21 +61,12 @@ type User implements Node {
   daysOff(before: String, after: String, first: Int, last: Int): DayOffConnection
 }
 
-type UserConnectionsConnection {
+type UserConnection {
   pageInfo: PageInfo!
-  edges: [UserConnectionsEdge]!
+  edges: [UserEdge]!
 }
 
-type UserConnectionsEdge {
+type UserEdge {
   node: User
   cursor: String!
-}
-
-enum UserSortEnum {
-  id_asc
-  id_desc
-  username_asc
-  username_desc
-  password_asc
-  password_desc
 }

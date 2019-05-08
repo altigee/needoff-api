@@ -5,8 +5,9 @@ from graphene import relay
 
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
-    all_users = SQLAlchemyConnectionField(types.UserConnections)
-    all_days_off = SQLAlchemyConnectionField(types.DayOffConnections)
+    all_users = SQLAlchemyConnectionField(types.User)
+    # find_user = graphene.Field(lambda: User, username=graphene.String)
+    all_days_off = SQLAlchemyConnectionField(types.DayOff)
 
 
 class Mutation(graphene.ObjectType):

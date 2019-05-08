@@ -10,17 +10,7 @@ class User(SQLAlchemyObjectType):
         interfaces = (relay.Node,)
 
 
-class UserConnections(relay.Connection):
-    class Meta:
-        node = User
-
-
 class DayOff(SQLAlchemyObjectType):
     class Meta:
         model = DayOffModel
         interfaces = (relay.Node,)
-
-
-class DayOffConnections(relay.Connection):
-    class Meta:
-        node = DayOff
