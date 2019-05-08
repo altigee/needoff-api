@@ -27,5 +27,8 @@ app.register_blueprint(health_v1)
 app.register_blueprint(ws_v1)
 app.register_blueprint(httperrors)
 
-graphql.init_graphql(app.config['GRAPHQL_JWT_ENABLED'])
+graphql.init_graphql(
+    jwt_enabled=app.config['GRAPHQL_JWT_ENABLED'],
+    dump_schema_enabled=app.config['GRAPHQL_SCHEMA_DUMP_ENABLED']
+)
 app.register_blueprint(graphql.graphql_resolver)

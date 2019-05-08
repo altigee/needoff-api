@@ -1,0 +1,102 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type CreateDayOff {
+  ok: Boolean
+  dayOff: DayOff
+}
+
+type DayOff implements Node {
+  id: ID!
+  userId: Int!
+  approvedById: Int
+  dayOffType: DayOffType!
+  user: User
+  approvedBy: User
+}
+
+type DayOffConnection {
+  pageInfo: PageInfo!
+  edges: [DayOffEdge]!
+}
+
+type DayOffConnectionsConnection {
+  pageInfo: PageInfo!
+  edges: [DayOffConnectionsEdge]!
+}
+
+type DayOffConnectionsEdge {
+  node: DayOff
+  cursor: String!
+}
+
+type DayOffEdge {
+  node: DayOff
+  cursor: String!
+}
+
+enum DayOffSortEnum {
+  id_asc
+  id_desc
+  user_id_asc
+  user_id_desc
+  approved_by_id_asc
+  approved_by_id_desc
+  day_off_type_asc
+  day_off_type_desc
+}
+
+enum DayOffType {
+  VACATION_PAID
+  VACATION_UNPAID
+  SICK_LEAVE
+}
+
+type Mutation {
+  createDayOff(dayOffType: String): CreateDayOff
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Query {
+  node(id: ID!): Node
+  allUsers(sort: [UserSortEnum] = [id_asc], before: String, after: String, first: Int, last: Int): UserConnectionsConnection
+  allDaysOff(sort: [DayOffSortEnum] = [id_asc], before: String, after: String, first: Int, last: Int): DayOffConnectionsConnection
+}
+
+type User implements Node {
+  id: ID!
+  username: String!
+  password: String!
+  daysOff(before: String, after: String, first: Int, last: Int): DayOffConnection
+}
+
+type UserConnectionsConnection {
+  pageInfo: PageInfo!
+  edges: [UserConnectionsEdge]!
+}
+
+type UserConnectionsEdge {
+  node: User
+  cursor: String!
+}
+
+enum UserSortEnum {
+  id_asc
+  id_desc
+  username_asc
+  username_desc
+  password_asc
+  password_desc
+}

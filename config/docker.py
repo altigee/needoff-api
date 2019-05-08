@@ -1,2 +1,3 @@
 SQLALCHEMY_DATABASE_URI = 'sqlite:///../db/needoff.db'
 GRAPHQL_JWT_ENABLED = False
+GRAPHQL_SCHEMA_DUMP_ENABLED = False
