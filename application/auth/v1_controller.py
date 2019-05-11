@@ -2,16 +2,16 @@ import logging
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
-    jwt_required,
     jwt_refresh_token_required,
     get_jwt_identity,
-    get_raw_jwt
+    get_raw_jwt,
+    decode_token
 )
-from application.auth.models import User, RevokedToken
+from application.auth.models import User
 from application.http.models import HttpError, HttpMessage
 from utils.http import returns_json, json_convert
 from flask import Blueprint
-from application.auth.v1_dto import RegisterRequest, RegisterResponse, LoginRequest, LoginResponse
+from application.auth.v1_dto import *
 
 LOG = logging.getLogger("[auth_v1]")
 
@@ -27,12 +27,15 @@ def register_v1(request: RegisterRequest):
         LOG.warning(f'Repeated registration for {request.username}')
         return HttpError(f'User {request.username} already exists'), 400
 
-    new_user = User(
-        username=request.username,
-        password=User.generate_hash(request.password))
-    new_user.save_to_db()
     access_token = create_access_token(identity=request.username)
     refresh_token = create_refresh_token(identity=request.username)
+    new_user = User(
+        username=request.username,
+        password=User.generate_hash(request.password),
+        jti=decode_token(refresh_token)['jti']
+    )
+    new_user.save_to_db()
+
     return RegisterResponse(new_user.id, access_token, refresh_token), 201
 
 
@@ -41,38 +44,31 @@ def register_v1(request: RegisterRequest):
 @json_convert(to=LoginRequest)
 def login_v1(request: LoginRequest):
     current_user = User.find_by_username(request.username)
-
     if not current_user:
         LOG.warning(f'Non-existing user {request.username} login')
         return HttpError(f"User {request.username} doesn't exist"), 400
 
     if User.verify_hash(request.password, current_user.password):
-        access_token = create_access_token(identity=request.username)
-        refresh_token = create_refresh_token(identity=request.username)
-
+        access_token, refresh_token = new_tokens(current_user.username)
+        current_user.jti = decode_token(refresh_token)['jti']
+        current_user.save_to_db()
         return LoginResponse(current_user.id, access_token, refresh_token), 200
     else:
         LOG.warning(f'Wrong credentials for user {request.username}')
         return HttpError('Wrong credentials'), 403
 
 
-@auth_v1.route('/logout/access', methods=['POST'])
-@returns_json
-@jwt_required
-def logout_access_v1():
-    jti = get_raw_jwt()['jti']
-    revoked_token = RevokedToken(jti=jti)
-    revoked_token.add()
-    return HttpMessage('Access token has been revoked'), 200
-
-
-@auth_v1.route('/logout/refresh', methods=['POST'])
+@auth_v1.route('/logout', methods=['POST'])
 @returns_json
 @jwt_refresh_token_required
-def logout_refresh_v1():
+def logout_v1():
     jti = get_raw_jwt()['jti']
-    revoked_token = RevokedToken(jti=jti)
-    revoked_token.add()
+    user = User.find_by_username(get_jwt_identity())
+    if user.jti != jti:
+        LOG.warning(f'Wrong JTI ({jti}) for user {user.username} on logout')
+        return HttpError('Invalid token'), 400
+    user.jti = None
+    user.save_to_db()
     return HttpMessage('Refresh token has been revoked'), 200
 
 
@@ -80,6 +76,18 @@ def logout_refresh_v1():
 @returns_json
 @jwt_refresh_token_required
 def token_refresh_v1():
-    current_user = get_jwt_identity()
-    access_token = create_access_token(identity=current_user)
-    return {'access_token': access_token}, 200
+    jti = get_raw_jwt()['jti']
+    user = User.find_by_username(get_jwt_identity())
+    if user.jti != jti:
+        return HttpError('Invalid token'), 400
+    access_token, refresh_token = new_tokens(user.username)
+    user.jti = decode_token(refresh_token)['jti']
+    user.save_to_db()
+    return RefreshResponse(
+        access_token=access_token,
+        refresh_token=refresh_token), 200
+
+
+def new_tokens(identity):
+    return create_access_token(identity=identity), \
+           create_refresh_token(identity=identity)

@@ -58,6 +58,7 @@ type User implements Node {
   id: ID!
   username: String!
   password: String!
+  jti: String
   daysOff(before: String, after: String, first: Int, last: Int): DayOffConnection
 }
 

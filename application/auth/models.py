@@ -8,6 +8,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
+    jti = db.Column(db.String, nullable=True)
 
     def save_to_db(self):
         db.session.add(self)
@@ -24,18 +25,3 @@ class User(db.Model):
     @staticmethod
     def verify_hash(password, password_hash):
         return sha256.verify(password, password_hash)
-
-
-class RevokedToken(db.Model):
-    __tablename__ = 'revoked_token'
-    id = db.Column(db.Integer, primary_key=True)
-    jti = db.Column(db.String(120))
-
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
-
-    @classmethod
-    def is_jti_blacklisted(cls, jti):
-        query = cls.query.filter_by(jti=jti).first()
-        return bool(query)

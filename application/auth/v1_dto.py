@@ -25,3 +25,9 @@ class LoginResponse:
     id: int
     access_token: str
     refresh_token: str
+
+
+@dataclass
+class RefreshResponse:
+    access_token: str
+    refresh_token: str
