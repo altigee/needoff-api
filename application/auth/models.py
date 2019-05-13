@@ -1,8 +1,8 @@
 from passlib.hash import pbkdf2_sha256 as sha256
-from application.shared.database import db
+from application.shared.database import db, Base, Persistent
 
 
-class User(db.Model):
+class User(Base, Persistent):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -11,17 +11,9 @@ class User(db.Model):
     created_time = db.Column(db.DateTime(), nullable=False)
     jti = db.Column(db.String, nullable=True)
 
-    def save_to_db(self):
-        db.session.add(self)
-        db.session.commit()
-
     @classmethod
     def find_by_username(cls, username):
-        return cls.query.filter_by(username=username).first()
-
-    @classmethod
-    def find_by_id(cls, user_id):
-        return cls.query.filter_by(id=id).first()
+        return cls.query().filter_by(username=username).first()
 
     @staticmethod
     def generate_hash(password):

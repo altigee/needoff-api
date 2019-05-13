@@ -1,5 +1,5 @@
 from flask import Flask
-from application.shared.database import db
+from application.shared.database import db, Base
 from application.jwt import jwt
 from application.auth.v1_controller import auth_v1
 from application.http.health_controller import health_v1
@@ -18,7 +18,7 @@ app.config.from_envvar('APPLICATION_SETTINGS', silent=True)
 
 db.app = app
 db.init_app(app)
-db.create_all()
+Base.metadata.create_all(bind=db.engine)
 
 jwt.init_app(app)
 
