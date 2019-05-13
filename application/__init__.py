@@ -7,7 +7,7 @@ from application.workspace.v1_controller import ws_v1
 from application.http import httperrors
 import logging
 import application.balances.models
-import application.http.graphql.resolver as graphql
+import application.http.graphql as graphql
 
 logging.basicConfig(level=logging.DEBUG)
 

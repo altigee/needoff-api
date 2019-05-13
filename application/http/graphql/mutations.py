@@ -1,6 +1,6 @@
 import graphene
 from application.balances.models import DayOffType, DayOff
-from application.auth.models import User
+from application.auth.models import User as _User
 from flask_jwt_extended import get_jwt_identity
 from application.http.graphql import types
 from graphql import GraphQLError
@@ -14,7 +14,7 @@ class CreateDayOff(graphene.Mutation):
     day_off = graphene.Field(lambda: types.DayOff)
 
     def mutate(self, args, day_off_type):
-        user = User.find_by_username(get_jwt_identity())
+        user = _User.find_by_username(get_jwt_identity())
         if not user:
             raise GraphQLError('User not found')
         day_off = DayOff()

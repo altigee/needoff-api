@@ -19,6 +19,10 @@ class User(db.Model):
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()
 
+    @classmethod
+    def find_by_id(cls, user_id):
+        return cls.query.filter_by(id=id).first()
+
     @staticmethod
     def generate_hash(password):
         return sha256.hash(password)

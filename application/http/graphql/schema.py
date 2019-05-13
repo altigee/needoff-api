@@ -1,12 +1,16 @@
-from application.http.graphql.mutations import *
 from graphene_sqlalchemy import SQLAlchemyConnectionField
-from graphene import relay
+
+from application.http.graphql.mutations import *
+from application.http.graphql.types import *
+import application.http.graphql.resolvers as resolvers
 
 
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
     all_users = SQLAlchemyConnectionField(types.User)
-    # find_user = graphene.Field(lambda: User, username=graphene.String)
+    user_by_name = graphene.Field(User,
+                                  username=graphene.String(required=True),
+                                  resolver=resolvers.user_by_name)
     all_days_off = SQLAlchemyConnectionField(types.DayOff)
 
 

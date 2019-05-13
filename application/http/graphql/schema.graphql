@@ -53,6 +53,7 @@ type PageInfo {
 type Query {
   node(id: ID!): Node
   allUsers(before: String, after: String, first: Int, last: Int): UserConnection
+  userByName(username: String!): User
   allDaysOff(before: String, after: String, first: Int, last: Int): DayOffConnection
 }
 
