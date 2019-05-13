@@ -1,4 +1,5 @@
 import logging
+import datetime
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -32,7 +33,8 @@ def register_v1(request: RegisterRequest):
     new_user = User(
         username=request.username,
         password=User.generate_hash(request.password),
-        jti=decode_token(refresh_token)['jti']
+        jti=decode_token(refresh_token)['jti'],
+        created_time=datetime.datetime.now()
     )
     new_user.save_to_db()
 

@@ -8,6 +8,7 @@ class User(SQLAlchemyObjectType):
     class Meta:
         model = UserModel
         interfaces = (relay.Node,)
+        exclude_fields = ('password',)
 
 
 class DayOff(SQLAlchemyObjectType):

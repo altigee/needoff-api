@@ -8,6 +8,8 @@ type CreateDayOff {
   dayOff: DayOff
 }
 
+scalar DateTime
+
 type DayOff implements Node {
   id: ID!
   userId: Int!
@@ -57,7 +59,7 @@ type Query {
 type User implements Node {
   id: ID!
   username: String!
-  password: String!
+  createdTime: DateTime!
   jti: String
   daysOff(before: String, after: String, first: Int, last: Int): DayOffConnection
 }
