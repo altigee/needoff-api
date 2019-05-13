@@ -3,7 +3,7 @@ from application.shared.database import db
 from sqlalchemy.sql import text
 from sqlalchemy.exc import DatabaseError
 
-from flask import Blueprint
+from sanic import Blueprint
 from utils.http import returns_json
 
 LOG = logging.getLogger("[health_v1]")
@@ -14,7 +14,7 @@ health_v1.url_prefix = "/v1/health"
 
 @health_v1.route('', methods=['GET'])
 @returns_json
-def health():
+def health(request):
     return {'DB Status': db_available()}, 200
 
 

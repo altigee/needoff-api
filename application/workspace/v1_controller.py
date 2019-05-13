@@ -1,5 +1,5 @@
 import logging
-from flask import Blueprint
+from sanic import Blueprint
 from dataclasses import dataclass
 from utils.http import returns_json, json_convert
 from application.auth.models import User as UserModel

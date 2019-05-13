@@ -23,8 +23,7 @@ def json_convert(to):
 
     def wrapper(func):
         @wraps(func)
-        def map_to_object():
-            from flask import request
+        def map_to_object(request):
             if not request.json:
                 raise NoJsonPayloadException('No payload given')
             return func(to(**request.json))

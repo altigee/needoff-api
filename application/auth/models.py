@@ -1,22 +1,28 @@
 from passlib.hash import pbkdf2_sha256 as sha256
-from application.shared.database import db
+from application.shared.database import db, Base
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.ext.declarative import as_declarative
 
 
-class User(db.Model):
+class User(Base):
     __tablename__ = 'user'
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
-    jti = db.Column(db.String, nullable=True)
+    id = Column(Integer, primary_key=True)
+    username = Column(String(120), unique=True, nullable=False)
+    password = Column(String(120), nullable=False)
+    refresh_token = Column(String, nullable=True)
 
-    def save_to_db(self):
-        db.session.add(self)
-        db.session.commit()
+    async def save_to_db(self):
+        db.add(self)
+        db.commit()
 
     @classmethod
-    def find_by_username(cls, username):
-        return cls.query.filter_by(username=username).first()
+    async def find_by_username(cls, username):
+        return db.query(cls).filter(username=username).first()
+
+    @classmethod
+    async def find_by_id(cls, user_id):
+        return db.query(cls).filter(id=user_id).first()
 
     @staticmethod
     def generate_hash(password):
