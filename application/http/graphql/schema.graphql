@@ -3,6 +3,13 @@ schema {
   mutation: Mutation
 }
 
+type Balance {
+  id: ID!
+  userId: Int!
+  balanceType: String!
+  amount: Int!
+}
+
 type CreateDayOff {
   ok: Boolean
   dayOff: DayOff
@@ -10,67 +17,27 @@ type CreateDayOff {
 
 scalar DateTime
 
-type DayOff implements Node {
+type DayOff {
   id: ID!
   userId: Int!
   approvedById: Int
-  dayOffType: DayOffType!
+  leaveType: String!
   user: User
   approvedBy: User
 }
 
-type DayOffConnection {
-  pageInfo: PageInfo!
-  edges: [DayOffEdge]!
-}
-
-type DayOffEdge {
-  node: DayOff
-  cursor: String!
-}
-
-enum DayOffType {
-  VACATION_PAID
-  VACATION_UNPAID
-  SICK_LEAVE
-}
-
 type Mutation {
-  createDayOff(dayOffType: String): CreateDayOff
-}
-
-interface Node {
-  id: ID!
-}
-
-type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
+  createDayOff(leaveType: String): CreateDayOff
 }
 
 type Query {
-  node(id: ID!): Node
-  allUsers(before: String, after: String, first: Int, last: Int): UserConnection
   userByName(username: String!): User
-  allDaysOff(before: String, after: String, first: Int, last: Int): DayOffConnection
+  myBalance: [Balance]
+  balanceByUser(username: String!): [Balance]
 }
 
-type User implements Node {
+type User {
   id: ID!
   username: String!
   createdTime: DateTime!
-  jti: String
-  daysOff(before: String, after: String, first: Int, last: Int): DayOffConnection
-}
-
-type UserConnection {
-  pageInfo: PageInfo!
-  edges: [UserEdge]!
-}
-
-type UserEdge {
-  node: User
-  cursor: String!
 }

@@ -36,7 +36,7 @@ def register_v1(request: RegisterRequest):
         jti=decode_token(refresh_token)['jti'],
         created_time=datetime.datetime.now()
     )
-    new_user.save_to_db()
+    new_user.save_and_persist()
 
     return RegisterResponse(new_user.id, access_token, refresh_token), 201
 
@@ -53,7 +53,7 @@ def login_v1(request: LoginRequest):
     if User.verify_hash(request.password, current_user.password):
         access_token, refresh_token = new_tokens(current_user.username)
         current_user.jti = decode_token(refresh_token)['jti']
-        current_user.save_to_db()
+        current_user.save_and_persist()
         return LoginResponse(current_user.id, access_token, refresh_token), 200
     else:
         LOG.warning(f'Wrong credentials for user {request.username}')
@@ -70,7 +70,7 @@ def logout_v1():
         LOG.warning(f'Wrong JTI ({jti}) for user {user.username} on logout')
         return HttpError('Invalid token'), 400
     user.jti = None
-    user.save_to_db()
+    user.save_and_persist()
     return HttpMessage('Refresh token has been revoked'), 200
 
 
@@ -80,11 +80,13 @@ def logout_v1():
 def token_refresh_v1():
     jti = get_raw_jwt()['jti']
     user = User.find_by_username(get_jwt_identity())
+    if not user:
+        return HttpError('User not found'), 404
     if user.jti != jti:
         return HttpError('Invalid token'), 400
     access_token, refresh_token = new_tokens(user.username)
     user.jti = decode_token(refresh_token)['jti']
-    user.save_to_db()
+    user.save_and_persist()
     return RefreshResponse(
         access_token=access_token,
         refresh_token=refresh_token), 200

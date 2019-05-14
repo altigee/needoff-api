@@ -1,17 +1,15 @@
-from graphene_sqlalchemy import SQLAlchemyConnectionField
-
-from application.http.graphql.mutations import *
-from application.http.graphql.types import *
 import application.http.graphql.resolvers as resolvers
+from application.http.graphql.mutations import *
 
 
 class Query(graphene.ObjectType):
-    node = relay.Node.Field()
-    all_users = SQLAlchemyConnectionField(types.User)
-    user_by_name = graphene.Field(User,
+    user_by_name = graphene.Field(types.User,
                                   username=graphene.String(required=True),
                                   resolver=resolvers.user_by_name)
-    all_days_off = SQLAlchemyConnectionField(types.DayOff)
+    my_balance = graphene.List(types.Balance, resolver=resolvers.my_balance)
+    balance_by_user = graphene.List(types.Balance,
+                                    username=graphene.String(required=True),
+                                    resolver=resolvers.balance_by_user)
 
 
 class Mutation(graphene.ObjectType):
@@ -25,7 +23,8 @@ def create_schema(dump_to_file):
         mutation=Mutation,
         types=[
             types.DayOff,
-            types.User
+            types.User,
+            types.Balance
         ]
     )
 

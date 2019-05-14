@@ -19,7 +19,6 @@ def health():
 
 
 def db_available():
-
     try:
         db.session.query('1').from_statement(text('SELECT 1')).all()
         return "Ok"
