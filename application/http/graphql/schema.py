@@ -10,6 +10,8 @@ class Query(graphene.ObjectType):
     balance_by_user = graphene.List(types.Balance,
                                     username=graphene.String(required=True),
                                     resolver=resolvers.balance_by_user)
+    profile = graphene.Field(types.Profile,
+            resolver=resolvers.profile)
 
 
 class Mutation(graphene.ObjectType):
@@ -24,7 +26,8 @@ def create_schema(dump_to_file):
         types=[
             types.DayOff,
             types.User,
-            types.Balance
+            types.Balance,
+            types.Profile
         ]
     )
 
