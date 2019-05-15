@@ -30,10 +30,21 @@ type Mutation {
   createDayOff(leaveType: String): CreateDayOff
 }
 
+type Profile {
+  userId: ID!
+  firstName: String!
+  lastName: String!
+  position: String!
+  phone: String!
+  email: String!
+  user: User
+}
+
 type Query {
   userByName(username: String!): User
   myBalance: [Balance]
   balanceByUser(username: String!): [Balance]
+  profile: Profile
 }
 
 type User {
