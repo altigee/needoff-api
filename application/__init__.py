@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from application.shared.database import db, Base
 from application.jwt import jwt
 from application.auth.v1_controller import auth_v1
@@ -16,6 +16,11 @@ app = Flask(__name__, )
 app.config.from_pyfile('../config/default.py')
 # needs to be passed in arguments, potentially defined in docker-compose '/instance/dev_config.py'
 app.config.from_envvar('APPLICATION_SETTINGS', silent=True)
+
+@app.before_request
+def before_request():
+    print('Before Request')
+    print(request)
 
 db.app = app
 db.init_app(app)

@@ -31,6 +31,13 @@ class DayOff(Base, Persistent):
 
     leave_type = db.Column('leave_type', db.String(120), nullable=False)
 
+    start_date = db.Column('start_date', db.Date, nullable=False)
+    end_date = db.Column('end_date', db.Date, nullable=False)
+
+    @classmethod
+    def find_by_user_id(cls, user_id):
+        return cls.query().filter_by(user_id=user_id).all()
+
 
 class Balance(Base, Persistent):
     __tablename__ = 'balance'

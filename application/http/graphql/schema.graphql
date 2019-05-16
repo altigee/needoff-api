@@ -22,12 +22,14 @@ type DayOff {
   userId: Int!
   approvedById: Int
   leaveType: String!
+  startDate: String!
+  endDate: String!
   user: User
   approvedBy: User
 }
 
 type Mutation {
-  createDayOff(leaveType: String): CreateDayOff
+  createDayOff(endDate: String, leaveType: String, startDate: String): CreateDayOff
 }
 
 type Profile {
@@ -42,6 +44,7 @@ type Profile {
 
 type Query {
   userByName(username: String!): User
+  myLeaves: [DayOff]
   myBalance: [Balance]
   balanceByUser(username: String!): [Balance]
   profile: Profile
