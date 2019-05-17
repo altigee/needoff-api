@@ -20,27 +20,6 @@ auth_v1 = Blueprint("auth_v1", __name__)
 auth_v1.url_prefix = "/v1/auth"
 
 
-#@auth_v1.route('/register', methods=['POST'])
-#@returns_json
-#@json_convert(to=RegisterRequest)
-def register_v1(request: RegisterRequest):
-    if User.find_by_username(request.username):
-        LOG.warning(f'Repeated registration for {request.username}')
-        return HttpError(f'User {request.username} already exists'), 400
-
-    access_token = create_access_token(identity=request.username)
-    refresh_token = create_refresh_token(identity=request.username)
-    new_user = User(
-        username=request.username,
-        password=User.generate_hash(request.password),
-        jti=decode_token(refresh_token)['jti'],
-        created_time=datetime.datetime.now()
-    )
-    new_user.save_and_persist()
-
-    return RegisterResponse(new_user.id, access_token, refresh_token), 201
-
-
 @auth_v1.route('/login', methods=['POST'])
 @returns_json
 @json_convert(to=LoginRequest)

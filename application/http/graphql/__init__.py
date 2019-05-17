@@ -21,7 +21,3 @@ def init_graphql(jwt_enabled, dump_schema_enabled=True):
 
     graphql_view = GraphQLView.as_view(name='graphql', schema=schema, graphiql=True)
     graphql_resolver.add_url_rule('/graphql', view_func=graphql_view)
-    # if jwt_enabled:
-    #     graphql_resolver.add_url_rule('/graphql', view_func=jwt_required(graphql_view))
-    # else:
-    #     graphql_resolver.add_url_rule('/graphql', view_func=graphql_view)
