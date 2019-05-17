@@ -1,68 +1,66 @@
-import logging
+import logging, datetime
 from flask import Blueprint
 from dataclasses import dataclass
 from utils.http import returns_json, json_convert
-from application.auth.models import User as UserModel
-from application.workspace.models import WorkspaceModel, WorkspaceUserModel
+from application.auth.models import User
+from application.workspace.models import *
 from application.http.models import HttpError
 from application.shared.database import db
+from typing import List
 
 from flask_jwt_extended import (
-    create_access_token,
-    create_refresh_token,
+    jwt_required,
+    current_user
 )
 
 
 LOG = logging.getLogger("[ws_v1]")
 
 ws_v1 = Blueprint("workspace_v1", __name__)
-ws_v1.url_prefix = "/v1/workspace"
+ws_v1.url_prefix = "/v1/workspaces"
 
 
 @dataclass
-class WorkspaceRegisterRequest:
-    workspace_name: str
-    username: str
-    password: str
+class WorkspaceCreateRequest:
+    name: str
+    enable_invitation_link: bool = False
 
 
 @dataclass
-class WorkspaceRegisterResponse:
-    workspace_name: str
-    username: str
-    password: str
+class WorkspaceCreateResponse:
+    id: int
+    name: str
+    invitation_link_token: str = ""
 
 
-@ws_v1.route("/register", methods=["POST"])
+@dataclass
+class WorkspaceInvitationRequestItem:
+    email: str
+    start_date: datetime.date = None # TODO: Figure out how to serialize JSON date string to date
+
+
+@ws_v1.route("", methods=["POST"])
+@jwt_required
 @returns_json
-@json_convert(to=WorkspaceRegisterRequest)
-def register_ws_v1(payload: WorkspaceRegisterRequest):
-    if WorkspaceModel.find_by_name(payload.workspace_name):
-        LOG.warning(f'Attempt to create duplicate workspace {payload.workspace_name}')
-        return HttpError(f'Workspace {payload.workspace_name} already exists'), 400
-
-    if UserModel.find_by_username(payload.username):
-        LOG.warning(f'Repeated registration for {payload.username}')
-        return HttpError(f'User {payload.username} already exists'), 400
+@json_convert(to=WorkspaceCreateRequest)
+def create_ws_v1(payload: WorkspaceCreateRequest):
+    if WorkspaceModel.find(name=payload.name):
+        LOG.warning(f'Attempt to create duplicate workspace {payload.name}')
+        return HttpError(f'Workspace {payload.name} already exists'), 400
 
     try:
-        user = UserModel(
-            username=payload.username,
-            password=UserModel.generate_hash(payload.password))
+        ws = WorkspaceModel(name=payload.name)
 
-        db.session.add(user)
-        db.session.flush()
+        if payload.enable_invitation_link:
+            ws.invitation_link_token = WorkspaceModel.generate_invitation_link_token()
 
-        ws = WorkspaceModel(
-            name=payload.workspace_name,
-            invitation_token=WorkspaceModel.generate_invitation_token_string()
-        )
         db.session.add(ws)
         db.session.flush()
 
         ws_user = WorkspaceUserModel(
-            user_id=user.id,
-            ws_id=ws.id
+            user_id=current_user.id,
+            ws_id=ws.id,
+            start_date=datetime.datetime.now()
         )
         db.session.add(ws_user)
         db.session.commit()
@@ -72,7 +70,40 @@ def register_ws_v1(payload: WorkspaceRegisterRequest):
         LOG.error(f"Workspace registration failed. Error: {e}")
         return HttpError('Could not register new workspace'), 500
 
-    access_token = create_access_token(identity=payload.username)
-    refresh_token = create_refresh_token(identity=payload.username)
+    return WorkspaceCreateResponse(id=ws.id, name=ws.name, invitation_link_token=ws.invitation_link_token), 201
 
-    return WorkspaceRegisterResponse(user.id, access_token, refresh_token), 201
+
+@ws_v1.route("/<ws_id>/invitations", methods=["POST"])
+@jwt_required
+@json_convert(to=WorkspaceInvitationRequestItem)
+def invite_v1(payload: WorkspaceInvitationRequestItem, ws_id):
+
+    if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id) is None:
+        return HttpError('Could not find associated workspace'), 404
+
+    user = User.find(email=payload.email)
+    if user is None:
+        if WorkspaceInvitation.find(email=payload.email, ws_id=ws_id) is None:
+            WorkspaceInvitation(email=payload.email, ws_id=ws_id, start_date=datetime.datetime.now(), status=WorkspaceInvitationStatus.PENDING).save()
+    elif WorkspaceUserModel.find(user_id=user.id, ws_id=ws_id) is None:
+        # start_date = payload.start_date if payload.start_date else datetime.date.now()
+        start_date = datetime.datetime.now()
+        WorkspaceUserModel(user_id=user.id, ws_id=ws_id, start_date=start_date).save()
+
+    return "", 201
+
+
+@ws_v1.route("/accepted_link_tokens/<token>", methods=["POST"])
+@jwt_required
+def join_workspace_by_invitation_link_token(token):
+
+    ws = WorkspaceModel.find(invitation_link_token=token)
+    if ws is None:
+        return HttpError('Invalid token'), 404
+
+    if WorkspaceUserModel.find(ws_id=ws.id, user_id=current_user.id) is not None:
+        return "", 201
+
+    WorkspaceUserModel(ws_id=ws.id, user_id=current_user.id, start_date=datetime.datetime.now()).save()
+
+    return "", 201

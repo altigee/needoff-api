@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class RegisterRequest:
     username: str
     password: str
+    email: str
 
 
 @dataclass

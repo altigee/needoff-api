@@ -54,4 +54,5 @@ type User {
   id: ID!
   username: String!
   createdTime: DateTime!
+  email: String!
 }
