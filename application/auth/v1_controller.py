@@ -20,9 +20,9 @@ auth_v1 = Blueprint("auth_v1", __name__)
 auth_v1.url_prefix = "/v1/auth"
 
 
-@auth_v1.route('/register', methods=['POST'])
-@returns_json
-@json_convert(to=RegisterRequest)
+#@auth_v1.route('/register', methods=['POST'])
+#@returns_json
+#@json_convert(to=RegisterRequest)
 def register_v1(request: RegisterRequest):
     if User.find_by_username(request.username):
         LOG.warning(f'Repeated registration for {request.username}')

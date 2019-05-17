@@ -1,5 +1,6 @@
 import application.http.graphql.resolvers as resolvers
 from application.http.graphql.mutations import *
+from flask_jwt_extended import jwt_required
 
 
 class Query(graphene.ObjectType):
@@ -17,6 +18,7 @@ class Query(graphene.ObjectType):
 
 class Mutation(graphene.ObjectType):
     create_day_off = CreateDayOff.Field()
+    register = RegisterUser.Field()
 
 
 def create_schema(dump_to_file):
