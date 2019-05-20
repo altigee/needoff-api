@@ -30,6 +30,7 @@ type DayOff {
 
 type Mutation {
   createDayOff(endDate: String, leaveType: String, startDate: String): CreateDayOff
+  register(email: String, password: String): RegisterUser
 }
 
 type Profile {
@@ -43,11 +44,21 @@ type Profile {
 }
 
 type Query {
-  userByName(username: String!): User
+  userByName(email: String!): User
   myLeaves: [DayOff]
   myBalance: [Balance]
-  balanceByUser(username: String!): [Balance]
+  balanceByUser(email: String!): [Balance]
   profile: Profile
+}
+
+type RegisterUser {
+  ok: Boolean
+  response: RegisterUserResponse
+}
+
+type RegisterUserResponse {
+  id: Int
+  email: String
 }
 
 type User {

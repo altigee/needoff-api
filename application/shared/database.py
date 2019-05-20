@@ -24,3 +24,6 @@ class Persistent:
     def save_and_persist(self):
         self.save()
         db.session.commit()
+
+    def rollback(self):
+        db.session.rollback()
