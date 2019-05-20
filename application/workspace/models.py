@@ -16,14 +16,6 @@ class WorkspaceModel(Base, Persistent):
     name = db.Column(db.String(255), unique=True, nullable=False)
     invitation_link_token = db.Column(db.String(255))
 
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    @classmethod
-    def find(cls, **kwargs):
-        return cls.query().filter_by(**kwargs).first()
-
     @staticmethod
     def generate_invitation_link_token():
         return str(uuid.uuid4())
@@ -38,14 +30,6 @@ class WorkspaceUserModel(Base, Persistent):
 
     # TODO: consider adding roles here.
 
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    @classmethod
-    def find(cls, **kwargs):
-        return cls.query().filter_by(**kwargs).first()
-
 
 class WorkspaceInvitation(Base, Persistent):
     __tablename__ = 'workspace_invitation'
@@ -55,14 +39,6 @@ class WorkspaceInvitation(Base, Persistent):
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False)
     status = db.Column(db.Enum(WorkspaceInvitationStatus), nullable=False)
     start_date = db.Column(db.Date, nullable=True)
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    @classmethod
-    def find(cls, **kwargs):
-        return cls.query().filter_by(**kwargs).first()
 
     @classmethod
     def list(cls, **kwargs):

@@ -7,6 +7,10 @@ Base = declarative_base()
 
 class Persistent:
     @classmethod
+    def find(cls, **kwargs):
+        return cls.query().filter_by(**kwargs).first()
+
+    @classmethod
     def find_by_id(cls, object_id):
         return cls.query().filter_by(id=object_id).first()
 

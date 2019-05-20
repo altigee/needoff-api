@@ -88,7 +88,7 @@ def invite_v1(payload: WorkspaceInvitationRequestItem, ws_id):
     elif WorkspaceUserModel.find(user_id=user.id, ws_id=ws_id) is None:
         # start_date = payload.start_date if payload.start_date else datetime.date.now()
         start_date = datetime.datetime.now()
-        WorkspaceUserModel(user_id=user.id, ws_id=ws_id, start_date=start_date).save()
+        WorkspaceUserModel(user_id=user.id, ws_id=ws_id, start_date=start_date).save_and_persist()
 
     return "", 201
 
@@ -104,6 +104,6 @@ def join_workspace_by_invitation_link_token(token):
     if WorkspaceUserModel.find(ws_id=ws.id, user_id=current_user.id) is not None:
         return "", 201
 
-    WorkspaceUserModel(ws_id=ws.id, user_id=current_user.id, start_date=datetime.datetime.now()).save()
+    WorkspaceUserModel(ws_id=ws.id, user_id=current_user.id, start_date=datetime.datetime.now()).save_and_persist()
 
     return "", 201

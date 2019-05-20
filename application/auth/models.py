@@ -6,7 +6,6 @@ class User(Base, Persistent):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     created_time = db.Column(db.DateTime(), nullable=False)
     jti = db.Column(db.String, nullable=True)
