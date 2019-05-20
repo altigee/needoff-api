@@ -40,6 +40,3 @@ class WorkspaceInvitation(Base, Persistent):
     status = db.Column(db.Enum(WorkspaceInvitationStatus), nullable=False)
     start_date = db.Column(db.Date, nullable=True)
 
-    @classmethod
-    def list(cls, **kwargs):
-        return cls.query().filter_by(**kwargs).all()

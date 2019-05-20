@@ -58,7 +58,7 @@ class RegisterUser(graphene.Mutation):
         else:
             # check ws invitatitons
             try:
-                pending_invitations = WorkspaceInvitation.list(email=email,
+                pending_invitations = WorkspaceInvitation.find_all(email=email,
                                                                status=WorkspaceInvitationStatus.PENDING)
                 processed_ws_ids = set()
                 for inv in pending_invitations:

@@ -22,13 +22,13 @@ def my_leaves(_, info):
 @gql_jwt_required
 def my_balance(_, info):
     user = current_user_or_error()
-    return _Balance.find_by_user(user.id)
+    return _Balance.find_by_user_id(user.id)
 
 
 @gql_jwt_required
 def balance_by_user(_, info, email):
     user = current_user_or_error()
-    return _Balance.find_by_user(user.id)
+    return _Balance.find_by_user_id(user.id)
 
 
 @gql_jwt_required

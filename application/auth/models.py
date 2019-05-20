@@ -13,11 +13,7 @@ class User(Base, Persistent):
 
     @classmethod
     def find_by_email(cls, email):
-        return cls.query().filter_by(email=email).first()
-
-    @classmethod
-    def find(cls, **kwargs):
-        return cls.query().filter_by(**kwargs).first()
+        return cls.find(email=email)
 
     @staticmethod
     def generate_hash(password):

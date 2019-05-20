@@ -11,8 +11,12 @@ class Persistent:
         return cls.query().filter_by(**kwargs).first()
 
     @classmethod
+    def find_all(cls, **kwargs):
+        return cls.query().filter_by(**kwargs).all()
+
+    @classmethod
     def find_by_id(cls, object_id):
-        return cls.query().filter_by(id=object_id).first()
+        return cls.find(id=object_id)
 
     @classmethod
     def query(cls):
