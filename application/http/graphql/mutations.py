@@ -74,7 +74,6 @@ class RegisterUser(graphene.Mutation):
                 db.session.commit()
             except Exception as e:
                 LOG.error(f"Workspace invitations check failed for user {new_user.email}. Error: {e}")
-            pass
 
         return RegisterUser(ok=True, response=RegisterUserResponse(id=new_user.id, email=new_user.email))
 
