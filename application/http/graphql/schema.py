@@ -14,6 +14,8 @@ class Query(graphene.ObjectType):
                                     resolver=resolvers.balance_by_user)
     profile = graphene.Field(types.Profile,
                              resolver=resolvers.profile)
+    my_workspaces = graphene.List(types.Workspace,
+                                   resolver=resolvers.my_workspaces)
 
 
 class Mutation(graphene.ObjectType):
@@ -30,7 +32,8 @@ def create_schema(dump_to_file):
             types.DayOff,
             types.User,
             types.Balance,
-            types.Profile
+            types.Profile,
+            types.Workspace
         ]
     )
 

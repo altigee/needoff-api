@@ -2,10 +2,8 @@
 from application.auth.models import User as _User
 from application.balances.models import Balance as _Balance, DayOff as _DayOff
 from application.users.models import UserProfile as _UserProfile
-from graphql import GraphQLError
+from application.workspace.models import WorkspaceModel as _WorkspaceModel
 from application.http.graphql.util import gql_jwt_required, current_user_or_error
-
-from flask import request
 
 
 @gql_jwt_required
@@ -35,3 +33,9 @@ def balance_by_user(_, info, email):
 def profile(_, info):
     user = current_user_or_error()
     return _UserProfile.find_by_user_id(user.id)
+
+
+@gql_jwt_required
+def my_workspaces(_, info):
+    user = current_user_or_error()
+    return _WorkspaceModel.find_by_user_id(user.id)

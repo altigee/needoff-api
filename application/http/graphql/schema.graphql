@@ -49,6 +49,7 @@ type Query {
   myBalance: [Balance]
   balanceByUser(email: String!): [Balance]
   profile: Profile
+  myWorkspaces: [Workspace]
 }
 
 type RegisterUser {
@@ -65,4 +66,11 @@ type User {
   id: ID!
   createdTime: DateTime!
   email: String!
+}
+
+type Workspace {
+  id: ID!
+  name: String!
+  description: String
+  invitationLinkToken: String
 }
