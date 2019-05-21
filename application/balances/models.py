@@ -23,16 +23,19 @@ class DayOff(Base, Persistent):
     __tablename__ = 'day_off'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column('user_id', db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', foreign_keys=[user_id])
+    user_id = db.Column('user_id', db.Integer, db.ForeignKey('user_profile.user_id'), nullable=False)
+    user = db.relationship('UserProfile', foreign_keys=[user_id])
 
-    approved_by_id = db.Column('approved_by_id', db.Integer, db.ForeignKey('user.id'), nullable=True)
-    approved_by = db.relationship('User', foreign_keys=[approved_by_id])
+    approved_by_id = db.Column('approved_by_id', db.Integer, db.ForeignKey('user_profile.user_id'), nullable=True)
+    approved_by = db.relationship('UserProfile', foreign_keys=[approved_by_id])
 
     leave_type = db.Column('leave_type', db.String(120), nullable=False)
 
     start_date = db.Column('start_date', db.Date, nullable=False)
     end_date = db.Column('end_date', db.Date, nullable=False)
+
+    workspace_id = db.Column('workspace_id', db.Integer, db.ForeignKey('workspace.id'), nullable=False)
+    workspace = db.relationship('WorkspaceModel', foreign_keys=[workspace_id])
 
     @classmethod
     def find_by_user_id(cls, user_id):

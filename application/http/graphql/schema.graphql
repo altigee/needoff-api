@@ -24,12 +24,14 @@ type DayOff {
   leaveType: String!
   startDate: String!
   endDate: String!
-  user: User
-  approvedBy: User
+  workspaceId: Int!
+  user: Profile
+  approvedBy: Profile
+  workspace: Workspace
 }
 
 type Mutation {
-  createDayOff(endDate: String, leaveType: String, startDate: String): CreateDayOff
+  createDayOff(endDate: String, leaveType: String, startDate: String, workspaceId: Int): CreateDayOff
   register(email: String, password: String): RegisterUser
 }
 
@@ -45,7 +47,7 @@ type Profile {
 
 type Query {
   userByName(email: String!): User
-  myLeaves: [DayOff]
+  myLeaves(workspaceId: Int!): [DayOff]
   myBalance: [Balance]
   balanceByUser(email: String!): [Balance]
   profile: Profile

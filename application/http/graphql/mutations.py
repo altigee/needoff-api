@@ -83,12 +83,13 @@ class CreateDayOff(graphene.Mutation):
         leave_type = graphene.String()
         start_date = graphene.String()
         end_date = graphene.String()
+        workspace_id = graphene.Int()
 
     ok = graphene.Boolean()
     day_off = graphene.Field(lambda: types.DayOff)
 
     @gql_jwt_required
-    def mutate(self, _, leave_type, start_date, end_date):
+    def mutate(self, _, leave_type, start_date, end_date, workspace_id):
         user = _UserModel.find_by_email(get_jwt_identity())
         if not user:
             raise GraphQLError('User not found')
@@ -98,6 +99,7 @@ class CreateDayOff(graphene.Mutation):
             leave_type=leave_type,
             start_date=to_date(start_date),
             end_date=to_date(end_date),
+            workspace_id=workspace_id,
             user_id=user.id)
         day_off.save_and_persist()
         return CreateDayOff(day_off=day_off, ok=True)

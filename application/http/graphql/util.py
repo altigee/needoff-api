@@ -1,12 +1,20 @@
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from functools import wraps
 from application.auth.models import User as _User
+from application.workspace.models import WorkspaceUserModel
 from graphql import GraphQLError
 
 
 def current_user_or_error(message="User not found"):
     user = _User.find_by_email(get_jwt_identity())
     if not user:
+        raise GraphQLError(message)
+    return user
+
+def current_user_in_workspace_or_error(ws_id, message="Wrong association"):
+    user = current_user_or_error()
+    assoc = WorkspaceUserModel.find(user_id=user.id, ws_id=ws_id)
+    if not assoc:
         raise GraphQLError(message)
     return user
 
