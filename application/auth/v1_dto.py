@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 @dataclass
 class RegisterRequest:
-    username: str
     password: str
+    email: str
 
 
 @dataclass
@@ -16,7 +16,7 @@ class RegisterResponse:
 
 @dataclass
 class LoginRequest:
-    username: str
+    email: str
     password: str
 
 

@@ -36,7 +36,7 @@ class DayOff(Base, Persistent):
 
     @classmethod
     def find_by_user_id(cls, user_id):
-        return cls.query().filter_by(user_id=user_id).all()
+        return cls.find_all(user_id=user_id)
 
 
 class Balance(Base, Persistent):
@@ -48,5 +48,5 @@ class Balance(Base, Persistent):
     amount = db.Column('amount', db.Integer, nullable=False)
 
     @classmethod
-    def find_by_user(cls, user_id):
-        return cls.query().filter_by(user_id=user_id).all()
+    def find_by_user_id(cls, user_id):
+        return cls.find_all(user_id=user_id)

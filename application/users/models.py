@@ -13,4 +13,4 @@ class UserProfile(Base, Persistent):
 
     @classmethod
     def find_by_user_id(cls, user_id):
-        return cls.query().filter_by(user_id=user_id).first()
+        return cls.find(user_id=user_id)

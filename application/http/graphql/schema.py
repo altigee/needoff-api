@@ -5,12 +5,12 @@ from flask_jwt_extended import jwt_required
 
 class Query(graphene.ObjectType):
     user_by_name = graphene.Field(types.User,
-                                  username=graphene.String(required=True),
+                                  email=graphene.String(required=True),
                                   resolver=resolvers.user_by_name)
     my_leaves = graphene.List(types.DayOff, resolver=resolvers.my_leaves)
     my_balance = graphene.List(types.Balance, resolver=resolvers.my_balance)
     balance_by_user = graphene.List(types.Balance,
-                                    username=graphene.String(required=True),
+                                    email=graphene.String(required=True),
                                     resolver=resolvers.balance_by_user)
     profile = graphene.Field(types.Profile,
                              resolver=resolvers.profile)

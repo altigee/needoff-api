@@ -9,8 +9,8 @@ from flask import request
 
 
 @gql_jwt_required
-def user_by_name(_, info, username):
-    return _User.find_by_username(username)
+def user_by_name(_, info, email):
+    return _User.find_by_email(email)
 
 
 @gql_jwt_required
@@ -22,13 +22,13 @@ def my_leaves(_, info):
 @gql_jwt_required
 def my_balance(_, info):
     user = current_user_or_error()
-    return _Balance.find_by_user(user.id)
+    return _Balance.find_by_user_id(user.id)
 
 
 @gql_jwt_required
-def balance_by_user(_, info, username):
+def balance_by_user(_, info, email):
     user = current_user_or_error()
-    return _Balance.find_by_user(user.id)
+    return _Balance.find_by_user_id(user.id)
 
 
 @gql_jwt_required

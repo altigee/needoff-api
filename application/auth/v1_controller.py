@@ -10,6 +10,7 @@ from flask_jwt_extended import (
 )
 from application.auth.models import User
 from application.http.models import HttpError, HttpMessage
+from application.workspace.models import *
 from utils.http import returns_json, json_convert
 from flask import Blueprint
 from application.auth.v1_dto import *
@@ -24,18 +25,18 @@ auth_v1.url_prefix = "/v1/auth"
 @returns_json
 @json_convert(to=LoginRequest)
 def login_v1(request: LoginRequest):
-    current_user = User.find_by_username(request.username)
+    current_user = User.find_by_email(request.email)
     if not current_user:
-        LOG.warning(f'Non-existing user {request.username} login')
-        return HttpError(f"User {request.username} doesn't exist"), 400
+        LOG.warning(f'Non-existing user {request.email} login')
+        return HttpError(f"User {request.email} doesn't exist"), 400
 
     if User.verify_hash(request.password, current_user.password):
-        access_token, refresh_token = new_tokens(current_user.username)
+        access_token, refresh_token = new_tokens(current_user.email)
         current_user.jti = decode_token(refresh_token)['jti']
         current_user.save_and_persist()
         return LoginResponse(current_user.id, access_token, refresh_token), 200
     else:
-        LOG.warning(f'Wrong credentials for user {request.username}')
+        LOG.warning(f'Wrong credentials for user {request.email}')
         return HttpError('Wrong credentials'), 403
 
 
@@ -44,9 +45,9 @@ def login_v1(request: LoginRequest):
 @jwt_refresh_token_required
 def logout_v1():
     jti = get_raw_jwt()['jti']
-    user = User.find_by_username(get_jwt_identity())
+    user = User.find_by_email(get_jwt_identity())
     if user.jti != jti:
-        LOG.warning(f'Wrong JTI ({jti}) for user {user.username} on logout')
+        LOG.warning(f'Wrong JTI ({jti}) for user {user.email} on logout')
         return HttpError('Invalid token'), 400
     user.jti = None
     user.save_and_persist()
@@ -58,12 +59,12 @@ def logout_v1():
 @jwt_refresh_token_required
 def token_refresh_v1():
     jti = get_raw_jwt()['jti']
-    user = User.find_by_username(get_jwt_identity())
+    user = User.find_by_email(get_jwt_identity())
     if not user:
         return HttpError('User not found'), 404
     if user.jti != jti:
         return HttpError('Invalid token'), 400
-    access_token, refresh_token = new_tokens(user.username)
+    access_token, refresh_token = new_tokens(user.email)
     user.jti = decode_token(refresh_token)['jti']
     user.save_and_persist()
     return RefreshResponse(

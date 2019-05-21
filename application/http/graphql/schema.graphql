@@ -44,10 +44,10 @@ type Profile {
 }
 
 type Query {
-  userByName(username: String!): User
+  userByName(email: String!): User
   myLeaves: [DayOff]
   myBalance: [Balance]
-  balanceByUser(username: String!): [Balance]
+  balanceByUser(email: String!): [Balance]
   profile: Profile
 }
 
@@ -63,6 +63,6 @@ type RegisterUserResponse {
 
 type User {
   id: ID!
-  username: String!
   createdTime: DateTime!
+  email: String!
 }
