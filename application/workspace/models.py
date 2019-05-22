@@ -1,3 +1,4 @@
+import datetime
 from application.shared.database import db, Base, Persistent
 import uuid
 from enum import Enum
@@ -8,6 +9,11 @@ class WorkspaceInvitationStatus(Enum):
     ACCEPTED = 0
     PENDING = 1
     REVOKED = 2
+
+
+class WorkspaceUserRelationTypes(Enum):
+    OWNER = 0
+    MEMBER = 1
 
 
 class WorkspaceModel(Base, Persistent):
@@ -33,7 +39,8 @@ class WorkspaceUserModel(Base, Persistent):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), primary_key=True)
-    start_date = db.Column(db.Date, nullable=False)
+    relation_type = db.Column(db.Enum(WorkspaceUserRelationTypes), default=WorkspaceUserRelationTypes.MEMBER, nullable=False)
+    start_date = db.Column(db.Date, default=datetime.datetime.now(), nullable=False)
 
     # TODO: consider adding roles here.
 

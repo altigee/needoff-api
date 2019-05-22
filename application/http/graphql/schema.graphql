@@ -15,6 +15,11 @@ type CreateDayOff {
   dayOff: DayOff
 }
 
+type CreateWorkspace {
+  ok: Boolean
+  ws: Workspace
+}
+
 scalar DateTime
 
 type DayOff {
@@ -25,14 +30,16 @@ type DayOff {
   startDate: String!
   endDate: String!
   workspaceId: Int!
+  comment: String
   user: Profile
   approvedBy: Profile
   workspace: Workspace
 }
 
 type Mutation {
-  createDayOff(endDate: String, leaveType: String, startDate: String, workspaceId: Int): CreateDayOff
+  createDayOff(comment: String, endDate: String, leaveType: String, startDate: String, workspaceId: Int): CreateDayOff
   register(email: String, password: String): RegisterUser
+  createWorkspace(description: String, name: String): CreateWorkspace
 }
 
 type Profile {

@@ -37,6 +37,8 @@ class DayOff(Base, Persistent):
     workspace_id = db.Column('workspace_id', db.Integer, db.ForeignKey('workspace.id'), nullable=False)
     workspace = db.relationship('WorkspaceModel', foreign_keys=[workspace_id])
 
+    comment = db.Column('comment', db.String(255), nullable=True)
+
     @classmethod
     def find_by_user_id(cls, user_id):
         return cls.find_all(user_id=user_id)

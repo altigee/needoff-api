@@ -23,6 +23,7 @@ class Query(graphene.ObjectType):
 class Mutation(graphene.ObjectType):
     create_day_off = CreateDayOff.Field()
     register = RegisterUser.Field()
+    create_workspace = CreateWorkspace.Field()
 
 
 def create_schema(dump_to_file):

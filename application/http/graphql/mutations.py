@@ -9,8 +9,9 @@ from flask_jwt_extended import (
     get_raw_jwt,
     decode_token
 )
+from application.workspace.models import WorkspaceModel, WorkspaceUserModel
 from application.http.graphql import types
-from application.http.graphql.util import gql_jwt_required
+from application.http.graphql.util import gql_jwt_required, current_user_or_error
 from graphql import GraphQLError
 import datetime
 import logging
@@ -59,7 +60,7 @@ class RegisterUser(graphene.Mutation):
             # check ws invitatitons
             try:
                 pending_invitations = WorkspaceInvitation.find_all(email=email,
-                                                               status=WorkspaceInvitationStatus.PENDING)
+                                                                   status=WorkspaceInvitationStatus.PENDING)
                 processed_ws_ids = set()
                 for inv in pending_invitations:
                     if inv.ws_id not in processed_ws_ids:
@@ -84,15 +85,14 @@ class CreateDayOff(graphene.Mutation):
         start_date = graphene.String()
         end_date = graphene.String()
         workspace_id = graphene.Int()
+        comment = graphene.String()
 
     ok = graphene.Boolean()
     day_off = graphene.Field(lambda: types.DayOff)
 
     @gql_jwt_required
-    def mutate(self, _, leave_type, start_date, end_date, workspace_id):
-        user = _UserModel.find_by_email(get_jwt_identity())
-        if not user:
-            raise GraphQLError('User not found')
+    def mutate(self, _, leave_type, start_date, end_date, workspace_id, comment):
+        user = current_user_or_error()
         if not is_valid_leave_type(leave_type):
             raise GraphQLError('Invalid leave type')
         day_off = DayOff(
@@ -100,6 +100,33 @@ class CreateDayOff(graphene.Mutation):
             start_date=to_date(start_date),
             end_date=to_date(end_date),
             workspace_id=workspace_id,
+            comment=comment,
             user_id=user.id)
         day_off.save_and_persist()
         return CreateDayOff(day_off=day_off, ok=True)
+
+
+class CreateWorkspace(graphene.Mutation):
+    class Arguments:
+        name = graphene.String()
+        description = graphene.String()
+
+    ok = graphene.Boolean()
+    ws = graphene.Field(lambda: types.Workspace)
+
+    @gql_jwt_required
+    def mutate(self, _, name, description):
+        user = current_user_or_error()
+        try:
+            new_ws = WorkspaceModel(name=name, description=description)
+            new_ws.save()
+            Persistent.flush()  # so we now have ID for new_ws
+            new_relation = WorkspaceUserModel(ws_id=new_ws.id,
+                                              user_id=user.id,
+                                              relation_type=WorkspaceUserRelationTypes.OWNER)
+            new_relation.save_and_persist()
+            return CreateWorkspace(ok=True, ws=new_ws)
+        except Exception as e:
+            LOG.error(f'Workspace creation failed. Error: {e}')
+            Persistent.rollback()
+            raise GraphQLError('Workspace creation failed.')
