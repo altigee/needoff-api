@@ -51,5 +51,5 @@ class WorkspaceInvitation(Base, Persistent):
     id = db.Column(db.Integer(), primary_key=True)
     email = db.Column(db.String(255), nullable=False)
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False)
-    status = db.Column(db.Enum(WorkspaceInvitationStatus), nullable=False)
+    status = db.Column(db.Enum(WorkspaceInvitationStatus), default=WorkspaceInvitationStatus.PENDING, nullable=False)
     start_date = db.Column(db.Date, nullable=True)

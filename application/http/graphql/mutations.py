@@ -110,12 +110,13 @@ class CreateWorkspace(graphene.Mutation):
     class Arguments:
         name = graphene.String()
         description = graphene.String()
+        members = graphene.List(of_type=graphene.String)
 
     ok = graphene.Boolean()
     ws = graphene.Field(lambda: types.Workspace)
 
     @gql_jwt_required
-    def mutate(self, _, name, description):
+    def mutate(self, _, name, description, members):
         user = current_user_or_error()
         try:
             new_ws = WorkspaceModel(name=name, description=description)
@@ -125,6 +126,9 @@ class CreateWorkspace(graphene.Mutation):
                                               user_id=user.id,
                                               relation_type=WorkspaceUserRelationTypes.OWNER)
             new_relation.save_and_persist()
+            for email in members:
+                wsi = WorkspaceInvitation(email=email, ws_id=new_ws.id)
+                wsi.save_and_persist()
             return CreateWorkspace(ok=True, ws=new_ws)
         except Exception as e:
             LOG.error(f'Workspace creation failed. Error: {e}')

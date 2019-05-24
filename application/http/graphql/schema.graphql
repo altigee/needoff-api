@@ -39,7 +39,7 @@ type DayOff {
 type Mutation {
   createDayOff(comment: String, endDate: String, leaveType: String, startDate: String, workspaceId: Int): CreateDayOff
   register(email: String, password: String): RegisterUser
-  createWorkspace(description: String, name: String): CreateWorkspace
+  createWorkspace(description: String, members: [String], name: String): CreateWorkspace
 }
 
 type Profile {
