@@ -21,8 +21,9 @@ class Query(graphene.ObjectType):
 
 
 class Mutation(graphene.ObjectType):
-    create_day_off = CreateDayOff.Field()
+    login = LoginUser.Field()
     register = RegisterUser.Field()
+    create_day_off = CreateDayOff.Field()
     create_workspace = CreateWorkspace.Field()
 
 

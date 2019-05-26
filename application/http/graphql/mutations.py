@@ -24,9 +24,32 @@ def to_date(date_time_str):
     return datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S.%f')
 
 
-class RegisterUserResponse(graphene.ObjectType):
-    id = graphene.Int()
-    email = graphene.String()
+class LoginUser(graphene.Mutation):
+    class Arguments:
+        email = graphene.String()
+        password = graphene.String()
+
+    ok = graphene.Boolean()
+    access_token = graphene.String()
+    refresh_token = graphene.String()
+
+    def mutate(self, _, email, password):
+        current_user = _UserModel.find_by_email(email)
+        if not current_user:
+            LOG.warning(f'Non-existing user {email} login')
+            raise GraphQLError('Wrong cedentials')
+
+        if _UserModel.verify_hash(password, current_user.password):
+            access_token = create_access_token(current_user.email)
+            refresh_token = create_refresh_token(current_user.email)
+            current_user.jti = decode_token(refresh_token)['jti']
+            current_user.save_and_persist()
+            return LoginUser(ok=True,
+                             access_token=access_token,
+                             refresh_token=refresh_token)
+        else:
+            LOG.warning(f'Wrong credentials for user {email}')
+            raise GraphQLError('Wrong credentials')
 
 
 class RegisterUser(graphene.Mutation):
@@ -35,7 +58,9 @@ class RegisterUser(graphene.Mutation):
         password = graphene.String()
 
     ok = graphene.Boolean()
-    response = graphene.Field(RegisterUserResponse)
+    user_id = graphene.Int()
+    access_token = graphene.String()
+    refresh_token = graphene.String()
 
     def mutate(self, _, email, password):
         if _UserModel.find_by_email(email):
@@ -76,12 +101,15 @@ class RegisterUser(graphene.Mutation):
             except Exception as e:
                 LOG.error(f"Workspace invitations check failed for user {new_user.email}. Error: {e}")
 
-        return RegisterUser(ok=True, response=RegisterUserResponse(id=new_user.id, email=new_user.email))
+        return RegisterUser(ok=True,
+                            user_id=new_user.id,
+                            access_token=access_token,
+                            refresh_token=refresh_token)
 
 
 class CreateDayOff(graphene.Mutation):
     class Arguments:
-        leave_type = graphene.String()
+        type = graphene.String()
         start_date = graphene.String()
         end_date = graphene.String()
         workspace_id = graphene.Int()
@@ -91,12 +119,12 @@ class CreateDayOff(graphene.Mutation):
     day_off = graphene.Field(lambda: types.DayOff)
 
     @gql_jwt_required
-    def mutate(self, _, leave_type, start_date, end_date, workspace_id, comment):
+    def mutate(self, _, type, start_date, end_date, workspace_id, comment):
         user = current_user_or_error()
-        if not is_valid_leave_type(leave_type):
+        if not is_valid_leave_type(type):
             raise GraphQLError('Invalid leave type')
         day_off = DayOff(
-            leave_type=leave_type,
+            leave_type=type,
             start_date=to_date(start_date),
             end_date=to_date(end_date),
             workspace_id=workspace_id,

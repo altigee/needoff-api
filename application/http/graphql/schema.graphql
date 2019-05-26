@@ -36,9 +36,16 @@ type DayOff {
   workspace: Workspace
 }
 
+type LoginUser {
+  ok: Boolean
+  accessToken: String
+  refreshToken: String
+}
+
 type Mutation {
-  createDayOff(comment: String, endDate: String, leaveType: String, startDate: String, workspaceId: Int): CreateDayOff
+  login(email: String, password: String): LoginUser
   register(email: String, password: String): RegisterUser
+  createDayOff(comment: String, endDate: String, startDate: String, type: String, workspaceId: Int): CreateDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
 }
 
@@ -63,12 +70,9 @@ type Query {
 
 type RegisterUser {
   ok: Boolean
-  response: RegisterUserResponse
-}
-
-type RegisterUserResponse {
-  id: Int
-  email: String
+  userId: Int
+  accessToken: String
+  refreshToken: String
 }
 
 type User {
