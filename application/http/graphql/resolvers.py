@@ -43,3 +43,9 @@ def profile(_, info):
 def my_workspaces(_, info):
     user = current_user_or_error()
     return _WorkspaceModel.find_by_user_id(user.id)
+
+
+@gql_jwt_required
+def team_calendar(_, info, workspace_id):
+    user = current_user_in_workspace_or_error(ws_id=workspace_id)
+    return _DayOff.find_all(workspace_id=workspace_id)

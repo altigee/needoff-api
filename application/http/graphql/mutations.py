@@ -9,13 +9,18 @@ from flask_jwt_extended import (
     get_raw_jwt,
     decode_token
 )
-from application.workspace.models import WorkspaceModel, WorkspaceUserModel
+from application.workspace.models import (WorkspaceModel,
+                                          WorkspaceUserModel,
+                                          WorkspaceInvitation,
+                                          WorkspaceInvitationStatus,
+                                          WorkspaceUserRelationTypes)
+from application.users.models import UserProfile
 from application.http.graphql import types
 from application.http.graphql.util import gql_jwt_required, current_user_or_error
 from graphql import GraphQLError
+from application.shared.database import db, Persistent
 import datetime
 import logging
-from application.workspace.models import *
 
 LOG = logging.getLogger("[mutations]")
 
@@ -69,17 +74,24 @@ class RegisterUser(graphene.Mutation):
 
         access_token = create_access_token(identity=email)
         refresh_token = create_refresh_token(identity=email)
-        new_user = _UserModel(
-            email=email,
-            password=_UserModel.generate_hash(password),
-            jti=decode_token(refresh_token)['jti'],
-            created_time=datetime.datetime.now()
-        )
         try:
-            new_user.save_and_persist()
+            new_user = _UserModel(
+                email=email,
+                password=_UserModel.generate_hash(password),
+                jti=decode_token(refresh_token)['jti'],
+                created_time=datetime.datetime.now()
+            )
+
+            new_user.save()
+            Persistent.flush()
+            new_user_profile = UserProfile(
+                user_id=new_user.id,
+                email=email
+            )
+            new_user_profile.save_and_persist()
         except Exception as e:
             LOG.error(f"User registration failed. Error: {e}")
-            new_user.rollback()
+            Persistent.rollback()
             raise GraphQLError("User registration failed.")
         else:
             # check ws invitatitons
@@ -100,6 +112,7 @@ class RegisterUser(graphene.Mutation):
                 db.session.commit()
             except Exception as e:
                 LOG.error(f"Workspace invitations check failed for user {new_user.email}. Error: {e}")
+                db.session.rollback()
 
         return RegisterUser(ok=True,
                             user_id=new_user.id,
@@ -156,6 +169,14 @@ class CreateWorkspace(graphene.Mutation):
             new_relation.save_and_persist()
             for email in members:
                 wsi = WorkspaceInvitation(email=email, ws_id=new_ws.id)
+                # check if user with this email already exist
+                user_by_email = _UserModel.find_by_email(email=email)
+                if user_by_email:
+                    member_relation = WorkspaceUserModel(ws_id=new_ws.id,
+                                                         user_id=user_by_email.id,
+                                                         relation_type=WorkspaceUserRelationTypes.MEMBER)
+                    member_relation.save()
+                    wsi.status = WorkspaceInvitationStatus.ACCEPTED
                 wsi.save_and_persist()
             return CreateWorkspace(ok=True, ws=new_ws)
         except Exception as e:

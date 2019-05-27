@@ -18,6 +18,7 @@ class Query(graphene.ObjectType):
                              resolver=resolvers.profile)
     my_workspaces = graphene.List(types.Workspace,
                                   resolver=resolvers.my_workspaces)
+    team_calendar = graphene.List(types.DayOff, workspace_id=graphene.Int(required=True), resolver=resolvers.team_calendar)
 
 
 class Mutation(graphene.ObjectType):
