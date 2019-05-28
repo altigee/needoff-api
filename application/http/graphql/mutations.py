@@ -76,7 +76,7 @@ class RegisterUser(graphene.Mutation):
         refresh_token = create_refresh_token(identity=email)
         try:
             new_user = _UserModel(
-                email=email,
+                email=email.strip(),
                 password=_UserModel.generate_hash(password),
                 jti=decode_token(refresh_token)['jti'],
                 created_time=datetime.datetime.now()
@@ -86,7 +86,7 @@ class RegisterUser(graphene.Mutation):
             Persistent.flush()
             new_user_profile = UserProfile(
                 user_id=new_user.id,
-                email=email
+                email=email.strip()
             )
             new_user_profile.save_and_persist()
         except Exception as e:
@@ -168,6 +168,8 @@ class CreateWorkspace(graphene.Mutation):
                                               relation_type=WorkspaceUserRelationTypes.OWNER)
             new_relation.save_and_persist()
             for email in members:
+                if email.strip() == user.email:
+                    continue
                 wsi = WorkspaceInvitation(email=email, ws_id=new_ws.id)
                 # check if user with this email already exist
                 user_by_email = _UserModel.find_by_email(email=email)
