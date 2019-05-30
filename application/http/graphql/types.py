@@ -6,6 +6,7 @@ from application.balances.models import DayOff as DayOffModel
 from application.users.models import UserProfile as ProfileModel
 from application.workspace.models import (
     WorkspaceModel,
+    WorkspaceInvitation as WorkspaceInvitationModel,
     WorkspaceHolidayCalendar as WorkspaceHolidayCalendarModel,
     Holiday as HolidayModel
 )
@@ -35,6 +36,11 @@ class Profile(SQLAlchemyObjectType):
 class Workspace(SQLAlchemyObjectType):
     class Meta:
         model = WorkspaceModel
+
+
+class WorkspaceInvitation(SQLAlchemyObjectType):
+    class Meta:
+        model = WorkspaceInvitationModel
 
 
 class WorkspaceHolidayCalendar(SQLAlchemyObjectType):

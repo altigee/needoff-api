@@ -102,6 +102,8 @@ type Query {
   balanceByUser(email: String!): [Balance]
   profile: Profile
   myWorkspaces: [Workspace]
+  workspaceById(workspaceId: Int!): Workspace
+  workspaceInvitations(workspaceId: Int!): [WorkspaceInvitation]
   workspaceCalendars(workspaceId: Int!): [WorkspaceHolidayCalendar]
   calendarHolidays(calendarId: Int!): [Holiday]
   teamCalendar(workspaceId: Int!): [DayOff]
@@ -143,4 +145,18 @@ type WorkspaceHolidayCalendar {
   id: ID!
   name: String!
   wsId: Int
+}
+
+type WorkspaceInvitation {
+  id: ID!
+  email: String!
+  wsId: Int!
+  status: WorkspaceInvitationStatus!
+  startDate: String
+}
+
+enum WorkspaceInvitationStatus {
+  ACCEPTED
+  PENDING
+  REVOKED
 }
