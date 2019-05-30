@@ -1,7 +1,7 @@
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from functools import wraps
 from application.auth.models import User as _User
-from application.workspace.models import WorkspaceUserModel
+from application.workspace.models import WorkspaceUserModel, WorkspaceUserRelationTypes
 from graphql import GraphQLError
 
 
@@ -10,6 +10,7 @@ def current_user_or_error(message="User not found"):
     if not user:
         raise GraphQLError(message)
     return user
+
 
 def current_user_in_workspace_or_error(ws_id, message="Wrong association"):
     user = current_user_or_error()

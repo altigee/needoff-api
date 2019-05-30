@@ -3,6 +3,15 @@ schema {
   mutation: Mutation
 }
 
+type AddHoliday {
+  ok: Boolean
+  holiday: Holiday
+}
+
+type AddWorkspaceMember {
+  ok: Boolean
+}
+
 type Balance {
   id: ID!
   userId: Int!
@@ -20,6 +29,13 @@ type CreateWorkspace {
   ws: Workspace
 }
 
+type CreateWorkspaceCalendar {
+  ok: Boolean
+  calendar: WorkspaceHolidayCalendar
+}
+
+scalar Date
+
 scalar DateTime
 
 type DayOff {
@@ -34,6 +50,13 @@ type DayOff {
   user: Profile
   approvedBy: Profile
   workspace: Workspace
+}
+
+type Holiday {
+  id: ID!
+  name: String!
+  calendarId: Int
+  date: String!
 }
 
 enum LeaveTypes {
@@ -54,6 +77,12 @@ type Mutation {
   register(email: String, password: String): RegisterUser
   createDayOff(comment: String, endDate: String, startDate: String, type: String, workspaceId: Int): CreateDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
+  addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddWorkspaceMember
+  removeWorkspaceMember(email: String, wsId: Int): RemoveWorkspaceMember
+  createWorkspaceCalendar(name: String, wsId: Int): CreateWorkspaceCalendar
+  removeWorkspaceCalendar(id: Int): RemoveWorkspaceCalendar
+  addHoliday(calendarId: Int, date: Date, name: String): AddHoliday
+  removeHoliday(id: Int): RemoveHoliday
 }
 
 type Profile {
@@ -73,6 +102,8 @@ type Query {
   balanceByUser(email: String!): [Balance]
   profile: Profile
   myWorkspaces: [Workspace]
+  workspaceCalendars(workspaceId: Int!): [WorkspaceHolidayCalendar]
+  calendarHolidays(calendarId: Int!): [Holiday]
   teamCalendar(workspaceId: Int!): [DayOff]
 }
 
@@ -81,6 +112,18 @@ type RegisterUser {
   userId: Int
   accessToken: String
   refreshToken: String
+}
+
+type RemoveHoliday {
+  ok: Boolean
+}
+
+type RemoveWorkspaceCalendar {
+  ok: Boolean
+}
+
+type RemoveWorkspaceMember {
+  ok: Boolean
 }
 
 type User {
@@ -94,4 +137,10 @@ type Workspace {
   name: String!
   description: String
   invitationLinkToken: String
+}
+
+type WorkspaceHolidayCalendar {
+  id: ID!
+  name: String!
+  wsId: Int
 }
