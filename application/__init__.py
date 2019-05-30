@@ -3,7 +3,6 @@ from application.shared.database import db, Base
 from application.jwt import jwt
 from application.auth.v1_controller import auth_v1
 from application.http.health_controller import health_v1
-from application.workspace.v1_controller import ws_v1
 from application.http import httperrors
 import logging
 import application.balances.models
@@ -30,7 +29,6 @@ jwt.init_app(app)
 
 app.register_blueprint(auth_v1)
 app.register_blueprint(health_v1)
-app.register_blueprint(ws_v1)
 app.register_blueprint(httperrors)
 
 graphql.init_graphql(

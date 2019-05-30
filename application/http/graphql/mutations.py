@@ -13,7 +13,9 @@ from application.workspace.models import (WorkspaceModel,
                                           WorkspaceUserModel,
                                           WorkspaceInvitation,
                                           WorkspaceInvitationStatus,
-                                          WorkspaceUserRelationTypes)
+                                          WorkspaceUserRelationTypes,
+                                          WorkspaceHolidayCalendar,
+                                          Holiday)
 from application.users.models import UserProfile
 from application.http.graphql import types
 from application.http.graphql.util import gql_jwt_required, current_user_or_error
@@ -185,3 +187,184 @@ class CreateWorkspace(graphene.Mutation):
             LOG.error(f'Workspace creation failed. Error: {e}')
             Persistent.rollback()
             raise GraphQLError('Workspace creation failed.')
+
+
+class AddWorkspaceMember(graphene.Mutation):
+    class Arguments:
+        email = graphene.String()
+        start_date = graphene.Date()
+        ws_id = graphene.Int()
+
+    ok = graphene.Boolean()
+
+    @gql_jwt_required
+    def mutate(self, _, email, ws_id, start_date=None):
+        current_user = current_user_or_error()
+
+        # TODO: Make it a shared function
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+            raise GraphQLError('You you\'re not a workspace owner.')
+
+        start_date = start_date if start_date else datetime.datetime.utcnow()
+
+        try:
+            user = _UserModel.find(email=email)
+            if user is None:
+                if WorkspaceInvitation.find(email=email, ws_id=ws_id) is None:
+                    WorkspaceInvitation(email=email, ws_id=ws_id, start_date=start_date,
+                                        status=WorkspaceInvitationStatus.PENDING).save_and_persist()
+            elif WorkspaceUserModel.find(user_id=user.id, ws_id=ws_id) is None:
+                WorkspaceUserModel(user_id=user.id, ws_id=ws_id, start_date=start_date).save_and_persist()
+            return AddWorkspaceMember(ok=True)
+        except Exception as e:
+            LOG.error(f'Could not add member into workspace. Error: {e}')
+            Persistent.rollback()
+            return GraphQLError('Could not add member into workspace.')
+
+
+class RemoveWorkspaceMember(graphene.Mutation):
+    class Arguments:
+        email = graphene.String()
+        ws_id = graphene.Int()
+
+    ok = graphene.Boolean()
+
+    @gql_jwt_required
+    def mutate(self, _, email, ws_id):
+        current_user = current_user_or_error()
+
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+            raise GraphQLError('You you\'re not a workspace owner.')
+
+        try:
+            invitation = WorkspaceInvitation.find(ws_id=ws_id, email=email)
+            if invitation:
+                invitation.delete()
+
+            ws_user = None
+
+            user = _UserModel.find(email=email)
+            if user:
+                ws_user = WorkspaceUserModel.find(ws_id=ws_id, user_id=user.id)
+
+            if ws_user:
+                ws_user.delete()
+
+            Persistent.commit()
+            return RemoveWorkspaceMember(ok=True)
+        except Exception as e:
+            LOG.error(f'Could not remove member from workspace.. Error: {e}')
+            Persistent.rollback()
+            return GraphQLError('Could not remove member from workspace.')
+
+
+class CreateWorkspaceCalendar(graphene.Mutation):
+    class Arguments:
+        name = graphene.String()
+        ws_id = graphene.Int()
+
+    ok = graphene.Boolean()
+    calendar = graphene.Field(lambda: types.WorkspaceHolidayCalendar)
+
+    @gql_jwt_required
+    def mutate(self, _, name, ws_id):
+        current_user = current_user_or_error()
+
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+            raise GraphQLError('You you\'re not a workspace owner.')
+
+        try:
+            calendar = WorkspaceHolidayCalendar(name=name,ws_id=ws_id)
+            calendar.save_and_persist()
+
+            return CreateWorkspaceCalendar(ok=True, calendar=calendar)
+        except Exception as e:
+            LOG.error(f'Calendar creation failed. Error: {e}')
+            Persistent.rollback()
+            return GraphQLError('Could not create calendar.')
+
+
+class RemoveWorkspaceCalendar(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int()
+
+    ok = graphene.Boolean()
+
+    @gql_jwt_required
+    def mutate(self, _, id):
+        current_user = current_user_or_error()
+
+        calendar = WorkspaceHolidayCalendar.find(id=id)
+
+        if calendar is None:
+            raise GraphQLError('Could not find a calendar.')
+
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=calendar.ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+            raise GraphQLError('You you\'re not a workspace owner.')
+
+        try:
+            calendar.delete_and_persist()
+
+            return CreateWorkspaceCalendar(ok=True)
+        except Exception as e:
+            LOG.error(f'Could not remove calendar. Error: {e}')
+            Persistent.rollback()
+            return GraphQLError('Could not remove calendar.')
+
+
+class AddHoliday(graphene.Mutation):
+    class Arguments:
+        calendar_id = graphene.Int()
+        date = graphene.Date()
+        name = graphene.String()
+
+    ok = graphene.Boolean()
+    holiday = graphene.Field(lambda: types.Holiday)
+
+    @gql_jwt_required
+    def mutate(self, _, calendar_id, date, name):
+        current_user = current_user_or_error()
+
+        calendar = WorkspaceHolidayCalendar.find(id=calendar_id)
+
+        if calendar is None:
+            raise GraphQLError('Could not find calendar.')
+
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=calendar.ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+            raise GraphQLError('You you\'re not a workspace owner.')
+
+        try:
+            holiday = Holiday(name=name, calendar_id=calendar_id,date=date)
+            holiday.save_and_persist()
+            return AddHoliday(ok=True, holiday=holiday)
+        except Exception as e:
+            raise GraphQLError('Could not add a holiday.')
+
+
+class RemoveHoliday(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int()
+
+    ok = graphene.Boolean()
+
+    @gql_jwt_required
+    def mutate(self, _, id):
+        current_user = current_user_or_error()
+
+        holiday = Holiday.find(id=id)
+
+        if holiday is None:
+            raise GraphQLError('Could not find holiday.')
+
+        calendar = WorkspaceHolidayCalendar.find(id=holiday.calendar_id)
+
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=calendar.ws_id,
+                                   relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+            raise GraphQLError('You you\'re not a workspace owner.')
+
+        try:
+            holiday.delete_and_persist()
+
+            return RemoveHoliday(ok=True)
+        except Exception as e:
+            raise GraphQLError('Could not remove a holiday.')

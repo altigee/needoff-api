@@ -29,9 +29,20 @@ class Persistent:
         self.save()
         db.session.commit()
 
+    def delete(self):
+        db.session.delete(self)
+
+    def delete_and_persist(self):
+        db.session.delete(self)
+        db.session.commit()
+
     @classmethod
     def rollback(cls):
         db.session.rollback()
+
+    @classmethod
+    def commit(cls):
+        db.session.commit()
 
     @classmethod
     def flush(cls):

@@ -42,8 +42,6 @@ class WorkspaceUserModel(Base, Persistent):
     relation_type = db.Column(db.Enum(WorkspaceUserRelationTypes), default=WorkspaceUserRelationTypes.MEMBER, nullable=False)
     start_date = db.Column(db.Date, default=datetime.datetime.now(), nullable=False)
 
-    # TODO: consider adding roles here.
-
 
 class WorkspaceInvitation(Base, Persistent):
     __tablename__ = 'workspace_invitation'
@@ -53,3 +51,20 @@ class WorkspaceInvitation(Base, Persistent):
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False)
     status = db.Column(db.Enum(WorkspaceInvitationStatus), default=WorkspaceInvitationStatus.PENDING, nullable=False)
     start_date = db.Column(db.Date, nullable=True)
+
+
+class WorkspaceHolidayCalendar(Base, Persistent):
+    __tablename__ = 'workspace_calendar'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'))
+
+
+class Holiday(Base, Persistent):
+    __tablename__ = 'holiday'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    calendar_id = db.Column(db.Integer, db.ForeignKey('workspace_calendar.id'))
+    date = db.Column(db.Date, nullable=False)
