@@ -24,6 +24,14 @@ class Query(graphene.ObjectType):
     my_workspaces = graphene.List(types.Workspace,
                                   resolver=resolvers.my_workspaces)
 
+    workspace_by_id = graphene.Field(types.Workspace,
+                                     workspace_id=graphene.Int(required=True),
+                                     resolver=resolvers.workspace_by_id)
+
+    workspace_invitations = graphene.List(types.WorkspaceInvitation,
+                                          workspace_id=graphene.Int(required=True),
+                                          resolver=resolvers.workspace_invitations)
+
     workspace_calendars = graphene.List(types.WorkspaceHolidayCalendar,
                                         workspace_id=graphene.Int(required=True),
                                         resolver=resolvers.workspace_calendars)
@@ -32,7 +40,8 @@ class Query(graphene.ObjectType):
                                       calendar_id=graphene.Int(required=True),
                                       resolver=resolvers.calendar_holidays)
 
-    team_calendar = graphene.List(types.DayOff, workspace_id=graphene.Int(required=True), resolver=resolvers.team_calendar)
+    team_calendar = graphene.List(types.DayOff, workspace_id=graphene.Int(required=True),
+                                  resolver=resolvers.team_calendar)
 
 
 class Mutation(graphene.ObjectType):
@@ -58,7 +67,8 @@ def create_schema(dump_to_file):
             types.User,
             types.Balance,
             types.Profile,
-            types.Workspace
+            types.Workspace,
+            types.WorkspaceInvitation
         ]
     )
 
