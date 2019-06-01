@@ -27,6 +27,9 @@ class Query(graphene.ObjectType):
     workspace_by_id = graphene.Field(types.Workspace,
                                      workspace_id=graphene.Int(required=True),
                                      resolver=resolvers.workspace_by_id)
+    workspace_owner = graphene.Field(types.Profile,
+                                     workspace_id=graphene.Int(required=True),
+                                     resolver=resolvers.workspace_owner)
 
     workspace_invitations = graphene.List(types.WorkspaceInvitation,
                                           workspace_id=graphene.Int(required=True),
