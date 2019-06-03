@@ -75,7 +75,7 @@ type LoginUser {
 type Mutation {
   login(email: String, password: String): LoginUser
   register(email: String, password: String): RegisterUser
-  createDayOff(comment: String, endDate: String, startDate: String, type: String, workspaceId: Int): CreateDayOff
+  createDayOff(comment: String, endDate: Date, startDate: Date, type: String, workspaceId: Int): CreateDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
   addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddWorkspaceMember
   removeWorkspaceMember(email: String, wsId: Int): RemoveWorkspaceMember

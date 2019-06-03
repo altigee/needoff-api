@@ -13,6 +13,7 @@ from application.http.graphql.util import (
     current_user_or_error,
     current_user_in_workspace_or_error
 )
+from application.shared.database import db
 
 
 @gql_jwt_required
@@ -55,6 +56,7 @@ def workspace_by_id(_, info, workspace_id):
     _ = current_user_in_workspace_or_error(ws_id=workspace_id)
     return _WorkspaceModel.find(id=workspace_id)
 
+
 @gql_jwt_required
 def workspace_owner(_, info, workspace_id):
     _ = current_user_in_workspace_or_error(ws_id=workspace_id)
@@ -65,12 +67,11 @@ def workspace_owner(_, info, workspace_id):
         return None
 
 
-
-
 @gql_jwt_required
 def workspace_invitations(_, info, workspace_id):
     _ = current_user_in_workspace_or_error(ws_id=workspace_id)
-    return WorkspaceInvitation.find_all(ws_id=workspace_id)
+    return db.session.query(WorkspaceInvitation).filter_by(ws_id=workspace_id).order_by(
+        WorkspaceInvitation.status.desc()).all()
 
 
 @gql_jwt_required

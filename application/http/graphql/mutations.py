@@ -125,8 +125,8 @@ class RegisterUser(graphene.Mutation):
 class CreateDayOff(graphene.Mutation):
     class Arguments:
         type = graphene.String()
-        start_date = graphene.String()
-        end_date = graphene.String()
+        start_date = graphene.Date()
+        end_date = graphene.Date()
         workspace_id = graphene.Int()
         comment = graphene.String()
 
@@ -214,6 +214,8 @@ class AddWorkspaceMember(graphene.Mutation):
                     WorkspaceInvitation(email=email, ws_id=ws_id, start_date=start_date,
                                         status=WorkspaceInvitationStatus.PENDING).save_and_persist()
             elif WorkspaceUserModel.find(user_id=user.id, ws_id=ws_id) is None:
+                WorkspaceInvitation(email=email, ws_id=ws_id, start_date=start_date,
+                                    status=WorkspaceInvitationStatus.ACCEPTED).save()
                 WorkspaceUserModel(user_id=user.id, ws_id=ws_id, start_date=start_date).save_and_persist()
             return AddWorkspaceMember(ok=True)
         except Exception as e:
