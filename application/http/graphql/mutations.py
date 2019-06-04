@@ -59,17 +59,23 @@ class LoginUser(graphene.Mutation):
             raise GraphQLError('Wrong credentials')
 
 
+class UserData(graphene.InputObjectType):
+    first_name = graphene.String()
+    last_name = graphene.String()
+
+
 class RegisterUser(graphene.Mutation):
     class Arguments:
         email = graphene.String()
         password = graphene.String()
+        user_data = UserData()
 
     ok = graphene.Boolean()
     user_id = graphene.Int()
     access_token = graphene.String()
     refresh_token = graphene.String()
 
-    def mutate(self, _, email, password):
+    def mutate(self, _, email, password, user_data):
         if _UserModel.find_by_email(email):
             LOG.warning(f'Repeated registration for {email}')
             raise GraphQLError(f'User {email} already exists')
@@ -88,7 +94,9 @@ class RegisterUser(graphene.Mutation):
             Persistent.flush()
             new_user_profile = UserProfile(
                 user_id=new_user.id,
-                email=email.strip()
+                email=email.strip(),
+                first_name=user_data.first_name,
+                last_name=user_data.last_name
             )
             new_user_profile.save_and_persist()
         except Exception as e:
@@ -140,8 +148,8 @@ class CreateDayOff(graphene.Mutation):
             raise GraphQLError('Invalid leave type')
         day_off = DayOff(
             leave_type=type,
-            start_date=to_date(start_date),
-            end_date=to_date(end_date),
+            start_date=start_date,
+            end_date=end_date,
             workspace_id=workspace_id,
             comment=comment,
             user_id=user.id)
@@ -202,7 +210,8 @@ class AddWorkspaceMember(graphene.Mutation):
         current_user = current_user_or_error()
 
         # TODO: Make it a shared function
-        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id,
+                                   relation_type=WorkspaceUserRelationTypes.OWNER) is None:
             raise GraphQLError('You you\'re not a workspace owner.')
 
         start_date = start_date if start_date else datetime.datetime.utcnow()
@@ -235,7 +244,8 @@ class RemoveWorkspaceMember(graphene.Mutation):
     def mutate(self, _, email, ws_id):
         current_user = current_user_or_error()
 
-        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id,
+                                   relation_type=WorkspaceUserRelationTypes.OWNER) is None:
             raise GraphQLError('You you\'re not a workspace owner.')
 
         try:
@@ -272,11 +282,12 @@ class CreateWorkspaceCalendar(graphene.Mutation):
     def mutate(self, _, name, ws_id):
         current_user = current_user_or_error()
 
-        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id,
+                                   relation_type=WorkspaceUserRelationTypes.OWNER) is None:
             raise GraphQLError('You you\'re not a workspace owner.')
 
         try:
-            calendar = WorkspaceHolidayCalendar(name=name,ws_id=ws_id)
+            calendar = WorkspaceHolidayCalendar(name=name, ws_id=ws_id)
             calendar.save_and_persist()
 
             return CreateWorkspaceCalendar(ok=True, calendar=calendar)
@@ -301,7 +312,8 @@ class RemoveWorkspaceCalendar(graphene.Mutation):
         if calendar is None:
             raise GraphQLError('Could not find a calendar.')
 
-        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=calendar.ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=calendar.ws_id,
+                                   relation_type=WorkspaceUserRelationTypes.OWNER) is None:
             raise GraphQLError('You you\'re not a workspace owner.')
 
         try:
@@ -332,11 +344,12 @@ class AddHoliday(graphene.Mutation):
         if calendar is None:
             raise GraphQLError('Could not find calendar.')
 
-        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=calendar.ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=calendar.ws_id,
+                                   relation_type=WorkspaceUserRelationTypes.OWNER) is None:
             raise GraphQLError('You you\'re not a workspace owner.')
 
         try:
-            holiday = Holiday(name=name, calendar_id=calendar_id,date=date)
+            holiday = Holiday(name=name, calendar_id=calendar_id, date=date)
             holiday.save_and_persist()
             return AddHoliday(ok=True, holiday=holiday)
         except Exception as e:
