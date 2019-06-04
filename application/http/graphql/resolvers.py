@@ -4,9 +4,9 @@ from application.balances.models import Balance as _Balance, DayOff as _DayOff
 from application.users.models import UserProfile as _UserProfile
 from application.workspace.models import (WorkspaceModel as _WorkspaceModel,
                                           WorkspaceInvitation,
+                                          HolidayCalendar,
                                           WorkspaceUserModel,
                                           WorkspaceUserRelationTypes,
-                                          WorkspaceHolidayCalendar,
                                           Holiday)
 from application.http.graphql.util import (
     gql_jwt_required,
@@ -77,12 +77,12 @@ def workspace_invitations(_, info, workspace_id):
 @gql_jwt_required
 def workspace_calendars(_, info, workspace_id):
     _ = current_user_in_workspace_or_error(ws_id=workspace_id)
-    return WorkspaceHolidayCalendar.find_all(ws_id=workspace_id)
+    return HolidayCalendar.find_all(ws_id=workspace_id)
 
 
 @gql_jwt_required
 def calendar_holidays(_, info, calendar_id):
-    calendar = WorkspaceHolidayCalendar.find(id=calendar_id)
+    calendar = HolidayCalendar.find(id=calendar_id)
 
     if calendar is None:
         return []

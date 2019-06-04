@@ -8,7 +8,7 @@ type AddHoliday {
   holiday: Holiday
 }
 
-type AddWorkspaceMember {
+type AddMember {
   ok: Boolean
 }
 
@@ -19,6 +19,11 @@ type Balance {
   amount: Int!
 }
 
+type CreateCalendar {
+  ok: Boolean
+  calendar: WorkspaceHolidayCalendar
+}
+
 type CreateDayOff {
   ok: Boolean
   dayOff: DayOff
@@ -27,11 +32,6 @@ type CreateDayOff {
 type CreateWorkspace {
   ok: Boolean
   ws: Workspace
-}
-
-type CreateWorkspaceCalendar {
-  ok: Boolean
-  calendar: WorkspaceHolidayCalendar
 }
 
 scalar Date
@@ -66,21 +66,21 @@ enum LeaveTypes {
   WFH
 }
 
-type LoginUser {
+type Login {
   ok: Boolean
   accessToken: String
   refreshToken: String
 }
 
 type Mutation {
-  login(email: String, password: String): LoginUser
-  register(email: String, password: String, userData: UserData): RegisterUser
+  login(email: String, password: String): Login
+  register(email: String, password: String, userData: UserData): Register
   createDayOff(comment: String, endDate: Date, startDate: Date, type: String, workspaceId: Int): CreateDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
-  addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddWorkspaceMember
-  removeWorkspaceMember(email: String, wsId: Int): RemoveWorkspaceMember
-  createWorkspaceCalendar(name: String, wsId: Int): CreateWorkspaceCalendar
-  removeWorkspaceCalendar(id: Int): RemoveWorkspaceCalendar
+  addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddMember
+  removeWorkspaceMember(email: String, wsId: Int): RemoveMember
+  createWorkspaceCalendar(name: String, wsId: Int): CreateCalendar
+  removeWorkspaceCalendar(id: Int): RemoveCalendar
   addHoliday(calendarId: Int, date: Date, name: String): AddHoliday
   removeHoliday(id: Int): RemoveHoliday
 }
@@ -110,22 +110,22 @@ type Query {
   teamCalendar(workspaceId: Int!): [DayOff]
 }
 
-type RegisterUser {
+type Register {
   ok: Boolean
   userId: Int
   accessToken: String
   refreshToken: String
 }
 
+type RemoveCalendar {
+  ok: Boolean
+}
+
 type RemoveHoliday {
   ok: Boolean
 }
 
-type RemoveWorkspaceCalendar {
-  ok: Boolean
-}
-
-type RemoveWorkspaceMember {
+type RemoveMember {
   ok: Boolean
 }
 

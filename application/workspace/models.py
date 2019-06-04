@@ -53,8 +53,8 @@ class WorkspaceInvitation(Base, Persistent):
     start_date = db.Column(db.Date, nullable=True)
 
 
-class WorkspaceHolidayCalendar(Base, Persistent):
-    __tablename__ = 'workspace_calendar'
+class HolidayCalendar(Base, Persistent):
+    __tablename__ = 'holiday_calendar'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
@@ -66,5 +66,5 @@ class Holiday(Base, Persistent):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
-    calendar_id = db.Column(db.Integer, db.ForeignKey('workspace_calendar.id'))
+    calendar_id = db.Column(db.Integer, db.ForeignKey('holiday_calendar.id'))
     date = db.Column(db.Date, nullable=False)
