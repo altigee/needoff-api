@@ -1,6 +1,7 @@
+import graphene
+import application.http.graphql.types as types
 import application.http.graphql.resolvers as resolvers
-from application.http.graphql.mutations import *
-from flask_jwt_extended import jwt_required
+from application.http.graphql.mutations import user, day_off, holiday_calendar, workspace
 
 
 class Query(graphene.ObjectType):
@@ -45,16 +46,16 @@ class Query(graphene.ObjectType):
 
 
 class Mutation(graphene.ObjectType):
-    login = LoginUser.Field()
-    register = RegisterUser.Field()
-    create_day_off = CreateDayOff.Field()
-    create_workspace = CreateWorkspace.Field()
-    add_workspace_member = AddWorkspaceMember.Field()
-    remove_workspace_member = RemoveWorkspaceMember.Field()
-    create_workspace_calendar = CreateWorkspaceCalendar.Field()
-    remove_workspace_calendar = RemoveWorkspaceCalendar.Field()
-    add_holiday = AddHoliday.Field()
-    remove_holiday = RemoveHoliday.Field()
+    login = user.Login.Field()
+    register = user.Register.Field()
+    create_day_off = day_off.CreateDayOff.Field()
+    create_workspace = workspace.CreateWorkspace.Field()
+    add_workspace_member = workspace.AddMember.Field()
+    remove_workspace_member = workspace.RemoveMember.Field()
+    create_workspace_calendar = holiday_calendar.CreateCalendar.Field()
+    remove_workspace_calendar = holiday_calendar.RemoveCalendar.Field()
+    add_holiday = holiday_calendar.AddHoliday.Field()
+    remove_holiday = holiday_calendar.RemoveHoliday.Field()
 
 
 def create_schema(dump_to_file):
