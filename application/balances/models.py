@@ -47,8 +47,10 @@ class DayOff(Base, Persistent):
         return cls.find_all(user_id=user_id)
 
 
-class Balance(Base, Persistent):
+# TODO: Delete it. We don't store balances.
+class Balance:
     __tablename__ = 'balance'
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column('user_id', db.Integer, db.ForeignKey('user.id'), nullable=False)
     # user = db.relationship('User', backref='balances', foreign_keys=[user_id])

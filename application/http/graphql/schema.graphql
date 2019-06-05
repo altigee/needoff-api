@@ -13,15 +13,12 @@ type AddMember {
 }
 
 type Balance {
-  id: ID!
-  userId: Int!
-  balanceType: String!
-  amount: Int!
-}
-
-type CreateCalendar {
-  ok: Boolean
-  calendar: WorkspaceHolidayCalendar
+  leftPaidLeaves: Int
+  leftUnpaidLeaves: Int
+  leftSickLeaves: Int
+  totalPaidLeaves: Int
+  totalUnpaidLeaves: Int
+  totalSickLeaves: Int
 }
 
 type CreateDayOff {
@@ -55,7 +52,7 @@ type DayOff {
 type Holiday {
   id: ID!
   name: String!
-  calendarId: Int
+  wsId: Int
   date: String!
 }
 
@@ -78,11 +75,11 @@ type Mutation {
   createDayOff(comment: String, endDate: Date, startDate: Date, type: String, workspaceId: Int): CreateDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
   addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddMember
+  updateWorkspaceMember(startDate: Date, userId: Int, wsId: Int): UpdateMember
   removeWorkspaceMember(email: String, wsId: Int): RemoveMember
-  createWorkspaceCalendar(name: String, wsId: Int): CreateCalendar
-  removeWorkspaceCalendar(id: Int): RemoveCalendar
-  addHoliday(calendarId: Int, date: Date, name: String): AddHoliday
+  addHoliday(date: Date, name: String, wsId: Int): AddHoliday
   removeHoliday(id: Int): RemoveHoliday
+  setPolicy(maxPaidVacationsPerYear: Int, maxSickLeavesPerYear: Int, maxUnpaidVacationsPerYear: Int, wsId: Int): SetPolicy
 }
 
 type Profile {
@@ -98,16 +95,14 @@ type Profile {
 type Query {
   userByName(email: String!): User
   myLeaves(workspaceId: Int!): [DayOff]
-  myBalance: [Balance]
+  myBalance(workspaceId: Int!): Balance
   balanceByUser(email: String!): [Balance]
   profile: Profile
   myWorkspaces: [Workspace]
   workspaceById(workspaceId: Int!): Workspace
   workspaceOwner(workspaceId: Int!): Profile
   workspaceInvitations(workspaceId: Int!): [WorkspaceInvitation]
-  workspaceCalendars(workspaceId: Int!): [WorkspaceHolidayCalendar]
-  workspaceCalendarById(calendarId: Int!): WorkspaceHolidayCalendar
-  calendarHolidays(calendarId: Int!): [Holiday]
+  workspaceHolidays(workspaceId: Int!): [Holiday]
   teamCalendar(workspaceId: Int!): [DayOff]
 }
 
@@ -118,16 +113,21 @@ type Register {
   refreshToken: String
 }
 
-type RemoveCalendar {
-  ok: Boolean
-}
-
 type RemoveHoliday {
   ok: Boolean
 }
 
 type RemoveMember {
   ok: Boolean
+}
+
+type SetPolicy {
+  ok: Boolean
+}
+
+type UpdateMember {
+  ok: Boolean
+  member: WorkspaceUser
 }
 
 type User {
@@ -148,12 +148,6 @@ type Workspace {
   invitationLinkToken: String
 }
 
-type WorkspaceHolidayCalendar {
-  id: ID!
-  name: String!
-  wsId: Int
-}
-
 type WorkspaceInvitation {
   id: ID!
   email: String!
@@ -166,4 +160,16 @@ enum WorkspaceInvitationStatus {
   ACCEPTED
   PENDING
   REVOKED
+}
+
+type WorkspaceUser {
+  userId: ID!
+  wsId: ID!
+  relationType: WorkspaceUserRelationTypes!
+  startDate: String!
+}
+
+enum WorkspaceUserRelationTypes {
+  OWNER
+  MEMBER
 }

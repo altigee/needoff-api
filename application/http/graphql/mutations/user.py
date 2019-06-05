@@ -1,19 +1,20 @@
-import graphene
+import graphene, datetime, logging
 from application.auth.models import User as _UserModel
+from application.users.models import UserProfile
+from graphql import GraphQLError
+from application.shared.database import db, Persistent
+
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
     decode_token
 )
-from application.workspace.models import (WorkspaceUserModel,
-                                          WorkspaceInvitation,
-                                          WorkspaceInvitationStatus
-                                          )
-from application.users.models import UserProfile
-from graphql import GraphQLError
-from application.shared.database import db, Persistent
-import datetime
-import logging
+from application.workspace.models import (
+    WorkspaceUser,
+    WorkspaceInvitation,
+    WorkspaceInvitationStatus
+)
+
 
 LOG = logging.getLogger("[mutations]")
 
@@ -99,9 +100,10 @@ class Register(graphene.Mutation):
                 for inv in pending_invitations:
                     if inv.ws_id not in processed_ws_ids:
                         processed_ws_ids.add(inv.ws_id)
-                        db.session.add(WorkspaceUserModel(user_id=new_user.id,
+                        db.session.add(WorkspaceUser(user_id=new_user.id,
                                                           ws_id=inv.ws_id,
-                                                          start_date=datetime.datetime.now()))
+                                                          start_date=datetime.datetime.now()
+                                                          ))
                     inv.status = WorkspaceInvitationStatus.ACCEPTED
                     db.session.query(WorkspaceInvitation) \
                         .filter(WorkspaceInvitation.id == inv.id) \
