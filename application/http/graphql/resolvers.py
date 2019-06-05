@@ -1,4 +1,6 @@
 # Place all the resolvers in this file
+from graphql import GraphQLError
+
 from application.auth.models import User as _User
 from application.balances.models import Balance as _Balance, DayOff as _DayOff
 from application.users.models import UserProfile as _UserProfile
@@ -79,6 +81,15 @@ def workspace_calendars(_, info, workspace_id):
     _ = current_user_in_workspace_or_error(ws_id=workspace_id)
     return HolidayCalendar.find_all(ws_id=workspace_id)
 
+@gql_jwt_required
+def workspace_calendar_by_id(_, info, calendar_id):
+    calendar = HolidayCalendar.find(id=calendar_id)
+
+    if calendar is None:
+        raise GraphQLError('Calendar not found.')
+
+    _ = current_user_in_workspace_or_error(ws_id=calendar.ws_id)
+    return calendar
 
 @gql_jwt_required
 def calendar_holidays(_, info, calendar_id):

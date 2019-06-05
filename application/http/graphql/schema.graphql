@@ -106,6 +106,7 @@ type Query {
   workspaceOwner(workspaceId: Int!): Profile
   workspaceInvitations(workspaceId: Int!): [WorkspaceInvitation]
   workspaceCalendars(workspaceId: Int!): [WorkspaceHolidayCalendar]
+  workspaceCalendarById(calendarId: Int!): WorkspaceHolidayCalendar
   calendarHolidays(calendarId: Int!): [Holiday]
   teamCalendar(workspaceId: Int!): [DayOff]
 }
