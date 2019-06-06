@@ -3,21 +3,16 @@ from application.balances.models import DayOff, is_valid_leave_type
 from application.http.graphql import types
 from application.http.graphql.util import gql_jwt_required, current_user_or_error
 from graphql import GraphQLError
-import datetime
 import logging
 
 LOG = logging.getLogger("[mutations]")
 
 
-def to_date(date_time_str):
-    return datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S.%f')
-
-
 class CreateDayOff(graphene.Mutation):
     class Arguments:
         type = graphene.String()
-        start_date = graphene.String()
-        end_date = graphene.String()
+        start_date = graphene.Date()
+        end_date = graphene.Date()
         workspace_id = graphene.Int()
         comment = graphene.String()
 
@@ -31,8 +26,8 @@ class CreateDayOff(graphene.Mutation):
             raise GraphQLError('Invalid leave type')
         day_off = DayOff(
             leave_type=type,
-            start_date=to_date(start_date),
-            end_date=to_date(end_date),
+            start_date=start_date,
+            end_date=end_date,
             workspace_id=workspace_id,
             comment=comment,
             user_id=user.id)

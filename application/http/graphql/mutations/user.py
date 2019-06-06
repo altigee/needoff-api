@@ -46,17 +46,23 @@ class Login(graphene.Mutation):
             raise GraphQLError('Wrong credentials')
 
 
+class UserData(graphene.InputObjectType):
+    first_name = graphene.String()
+    last_name = graphene.String()
+
+
 class Register(graphene.Mutation):
     class Arguments:
         email = graphene.String()
         password = graphene.String()
+        user_data = UserData()
 
     ok = graphene.Boolean()
     user_id = graphene.Int()
     access_token = graphene.String()
     refresh_token = graphene.String()
 
-    def mutate(self, _, email, password):
+    def mutate(self, _, email, password, user_data):
         if _UserModel.find_by_email(email):
             LOG.warning(f'Repeated registration for {email}')
             raise GraphQLError(f'User {email} already exists')
@@ -75,7 +81,9 @@ class Register(graphene.Mutation):
             Persistent.flush()
             new_user_profile = UserProfile(
                 user_id=new_user.id,
-                email=email.strip()
+                email=email.strip(),
+                first_name=user_data.first_name.strip(),
+                last_name=user_data.last_name.strip()
             )
             new_user_profile.save_and_persist()
         except Exception as e:

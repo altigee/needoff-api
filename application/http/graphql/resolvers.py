@@ -1,16 +1,21 @@
 # Place all the resolvers in this file
+from graphql import GraphQLError
+
 from application.auth.models import User as _User
 from application.balances.models import Balance as _Balance, DayOff as _DayOff
 from application.users.models import UserProfile as _UserProfile
 from application.workspace.models import (WorkspaceModel as _WorkspaceModel,
                                           WorkspaceInvitation,
                                           HolidayCalendar,
+                                          WorkspaceUserModel,
+                                          WorkspaceUserRelationTypes,
                                           Holiday)
 from application.http.graphql.util import (
     gql_jwt_required,
     current_user_or_error,
     current_user_in_workspace_or_error
 )
+from application.shared.database import db
 
 
 @gql_jwt_required
@@ -55,9 +60,20 @@ def workspace_by_id(_, info, workspace_id):
 
 
 @gql_jwt_required
+def workspace_owner(_, info, workspace_id):
+    _ = current_user_in_workspace_or_error(ws_id=workspace_id)
+    ws_user = WorkspaceUserModel.find(ws_id=workspace_id, relation_type=WorkspaceUserRelationTypes.OWNER)
+    try:
+        return _UserProfile.find_by_user_id(ws_user.user_id)
+    except Exception:
+        return None
+
+
+@gql_jwt_required
 def workspace_invitations(_, info, workspace_id):
     _ = current_user_in_workspace_or_error(ws_id=workspace_id)
-    return WorkspaceInvitation.find_all(ws_id=workspace_id)
+    return db.session.query(WorkspaceInvitation).filter_by(ws_id=workspace_id).order_by(
+        WorkspaceInvitation.status.desc()).all()
 
 
 @gql_jwt_required
@@ -65,6 +81,15 @@ def workspace_calendars(_, info, workspace_id):
     _ = current_user_in_workspace_or_error(ws_id=workspace_id)
     return HolidayCalendar.find_all(ws_id=workspace_id)
 
+@gql_jwt_required
+def workspace_calendar_by_id(_, info, calendar_id):
+    calendar = HolidayCalendar.find(id=calendar_id)
+
+    if calendar is None:
+        raise GraphQLError('Calendar not found.')
+
+    _ = current_user_in_workspace_or_error(ws_id=calendar.ws_id)
+    return calendar
 
 @gql_jwt_required
 def calendar_holidays(_, info, calendar_id):

@@ -28,6 +28,9 @@ class Query(graphene.ObjectType):
     workspace_by_id = graphene.Field(types.Workspace,
                                      workspace_id=graphene.Int(required=True),
                                      resolver=resolvers.workspace_by_id)
+    workspace_owner = graphene.Field(types.Profile,
+                                     workspace_id=graphene.Int(required=True),
+                                     resolver=resolvers.workspace_owner)
 
     workspace_invitations = graphene.List(types.WorkspaceInvitation,
                                           workspace_id=graphene.Int(required=True),
@@ -36,6 +39,10 @@ class Query(graphene.ObjectType):
     workspace_calendars = graphene.List(types.WorkspaceHolidayCalendar,
                                         workspace_id=graphene.Int(required=True),
                                         resolver=resolvers.workspace_calendars)
+
+    workspace_calendar_by_id = graphene.Field(types.WorkspaceHolidayCalendar,
+                                              calendar_id=graphene.Int(required=True),
+                                              resolver=resolvers.workspace_calendar_by_id)
 
     calendar_holidays = graphene.List(types.Holiday,
                                       calendar_id=graphene.Int(required=True),

@@ -74,8 +74,8 @@ type Login {
 
 type Mutation {
   login(email: String, password: String): Login
-  register(email: String, password: String): Register
-  createDayOff(comment: String, endDate: String, startDate: String, type: String, workspaceId: Int): CreateDayOff
+  register(email: String, password: String, userData: UserData): Register
+  createDayOff(comment: String, endDate: Date, startDate: Date, type: String, workspaceId: Int): CreateDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
   addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddMember
   removeWorkspaceMember(email: String, wsId: Int): RemoveMember
@@ -103,8 +103,10 @@ type Query {
   profile: Profile
   myWorkspaces: [Workspace]
   workspaceById(workspaceId: Int!): Workspace
+  workspaceOwner(workspaceId: Int!): Profile
   workspaceInvitations(workspaceId: Int!): [WorkspaceInvitation]
   workspaceCalendars(workspaceId: Int!): [WorkspaceHolidayCalendar]
+  workspaceCalendarById(calendarId: Int!): WorkspaceHolidayCalendar
   calendarHolidays(calendarId: Int!): [Holiday]
   teamCalendar(workspaceId: Int!): [DayOff]
 }
@@ -132,6 +134,11 @@ type User {
   id: ID!
   createdTime: DateTime!
   email: String!
+}
+
+input UserData {
+  firstName: String
+  lastName: String
 }
 
 type Workspace {

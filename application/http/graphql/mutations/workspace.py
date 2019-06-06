@@ -70,7 +70,8 @@ class AddMember(graphene.Mutation):
         current_user = current_user_or_error()
 
         # TODO: Make it a shared function
-        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id,
+                                   relation_type=WorkspaceUserRelationTypes.OWNER) is None:
             raise GraphQLError('You you\'re not a workspace owner.')
 
         start_date = start_date if start_date else datetime.datetime.utcnow()
@@ -82,6 +83,8 @@ class AddMember(graphene.Mutation):
                     WorkspaceInvitation(email=email, ws_id=ws_id, start_date=start_date,
                                         status=WorkspaceInvitationStatus.PENDING).save_and_persist()
             elif WorkspaceUserModel.find(user_id=user.id, ws_id=ws_id) is None:
+                WorkspaceInvitation(email=email, ws_id=ws_id, start_date=start_date,
+                                    status=WorkspaceInvitationStatus.ACCEPTED).save()
                 WorkspaceUserModel(user_id=user.id, ws_id=ws_id, start_date=start_date).save_and_persist()
             return AddMember(ok=True)
         except Exception as e:
@@ -101,7 +104,8 @@ class RemoveMember(graphene.Mutation):
     def mutate(self, _, email, ws_id):
         current_user = current_user_or_error()
 
-        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id, relation_type=WorkspaceUserRelationTypes.OWNER) is None:
+        if WorkspaceUserModel.find(user_id=current_user.id, ws_id=ws_id,
+                                   relation_type=WorkspaceUserRelationTypes.OWNER) is None:
             raise GraphQLError('You you\'re not a workspace owner.')
 
         try:
