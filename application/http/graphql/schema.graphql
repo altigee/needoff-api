@@ -12,6 +12,14 @@ type AddMember {
   ok: Boolean
 }
 
+type AddUserRole {
+  ok: Boolean
+}
+
+type ApproveDayOff {
+  ok: Boolean
+}
+
 type Balance {
   leftPaidLeaves: Int
   leftUnpaidLeaves: Int
@@ -73,13 +81,16 @@ type Mutation {
   login(email: String, password: String): Login
   register(email: String, password: String, userData: UserData): Register
   createDayOff(comment: String, endDate: Date, startDate: Date, type: String, workspaceId: Int): CreateDayOff
+  approveDayOff(dayOffId: Int): ApproveDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
   addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddMember
   updateWorkspaceMember(startDate: Date, userId: Int, wsId: Int): UpdateMember
   removeWorkspaceMember(email: String, wsId: Int): RemoveMember
+  addUserRole(role: String, userId: Int, wsId: Int): AddUserRole
+  removeUserRole(role: String, userId: Int, wsId: Int): RemoveUserRole
   addHoliday(date: Date, name: String, wsId: Int): AddHoliday
   removeHoliday(id: Int): RemoveHoliday
-  setPolicy(maxPaidVacationsPerYear: Int, maxSickLeavesPerYear: Int, maxUnpaidVacationsPerYear: Int, wsId: Int): SetPolicy
+  setWorkspacePolicy(maxPaidVacationsPerYear: Int, maxSickLeavesPerYear: Int, maxUnpaidVacationsPerYear: Int, wsId: Int): SetPolicy
 }
 
 type Profile {
@@ -104,6 +115,7 @@ type Query {
   workspaceInvitations(workspaceId: Int!): [WorkspaceInvitation]
   workspaceHolidays(workspaceId: Int!): [Holiday]
   teamCalendar(workspaceId: Int!): [DayOff]
+  dayOffsForApproval(workspaceId: Int!): [DayOff]
 }
 
 type Register {
@@ -118,6 +130,10 @@ type RemoveHoliday {
 }
 
 type RemoveMember {
+  ok: Boolean
+}
+
+type RemoveUserRole {
   ok: Boolean
 }
 
@@ -165,11 +181,5 @@ enum WorkspaceInvitationStatus {
 type WorkspaceUser {
   userId: ID!
   wsId: ID!
-  relationType: WorkspaceUserRelationTypes!
   startDate: String!
-}
-
-enum WorkspaceUserRelationTypes {
-  OWNER
-  MEMBER
 }

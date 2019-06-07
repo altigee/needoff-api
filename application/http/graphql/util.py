@@ -1,7 +1,7 @@
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from functools import wraps
 from application.auth.models import User as _User
-from application.workspace.models import WorkspaceUser
+from application.workspace.models import WorkspaceUser, WorkspaceUserRole
 from graphql import GraphQLError
 
 
@@ -26,6 +26,14 @@ def current_user_in_workspace_or_error(ws_id, message="Wrong association", relat
     if not assoc:
         raise GraphQLError(message)
     return user
+
+
+def check_role_or_error(ws_id, role, error="Not permitted"):
+    user = current_user_or_error()
+
+    if not WorkspaceUserRole.find(ws_id=ws_id, user_id=user.id, role=role):
+        raise GraphQLError(error)
+
 
 def gql_jwt_required(fn):
     @wraps(fn)

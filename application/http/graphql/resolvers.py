@@ -12,12 +12,14 @@ from application.workspace.models import (
     WorkspacePolicy,
     WorkspaceUser,
     WorkspaceUserRelationTypes,
-    WorkspaceHoliday
+    WorkspaceHoliday,
+    WorkspaceUserRoles
 )
 from application.http.graphql.util import (
     gql_jwt_required,
     current_user_or_error,
-    current_user_in_workspace_or_error
+    current_user_in_workspace_or_error,
+    check_role_or_error
 )
 
 @gql_jwt_required
@@ -42,7 +44,11 @@ def my_balance(_, info, workspace_id):
     if policy is None:
         raise GraphQLError('No policies defined for workspace.')
 
-    leaves = _DayOff.find_all(user_id=user.id, workspace_id=workspace_id)
+    leaves = _DayOff.query().\
+        filter(_DayOff.user_id == user.id).\
+        filter(_DayOff.workspace_id == workspace_id).\
+        filter(_DayOff.approved_by_id != None).\
+        all()
     ws_user = WorkspaceUser.find(user_id=user.id, ws_id=workspace_id)
     worked_months = ws_user.get_worked_months()
 
@@ -131,3 +137,13 @@ def workspace_holidays(_, info, workspace_id):
 def team_calendar(_, info, workspace_id):
     user = current_user_in_workspace_or_error(ws_id=workspace_id)
     return _DayOff.find_all(workspace_id=workspace_id)
+
+
+@gql_jwt_required
+def day_offs_for_approval(_, info, workspace_id):
+    check_role_or_error(ws_id=workspace_id, role=WorkspaceUserRoles.APPROVER)
+
+    return _DayOff.query().\
+        filter(_DayOff.workspace_id == workspace_id).\
+        filter(_DayOff.approved_by_id == None).\
+        all()

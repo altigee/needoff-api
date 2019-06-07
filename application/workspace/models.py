@@ -1,7 +1,7 @@
 import datetime
 from application.shared.database import db, Base, Persistent
 import uuid
-from enum import Enum
+from enum import Enum, auto
 
 
 class WorkspaceInvitationStatus(Enum):
@@ -13,6 +13,17 @@ class WorkspaceInvitationStatus(Enum):
 class WorkspaceUserRelationTypes(Enum):
     OWNER = 0
     MEMBER = 1
+
+
+class WorkspaceUserRoles(Enum):
+    MEMBER = auto()
+    APPROVER = auto()
+    ADMIN = auto()
+    OWNER = auto()
+
+    @classmethod
+    def is_valid_role(cls, role):
+        return role in cls.__members__
 
 
 class WorkspaceModel(Base, Persistent):
@@ -38,7 +49,6 @@ class WorkspaceUser(Base, Persistent):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), primary_key=True)
-    relation_type = db.Column(db.Enum(WorkspaceUserRelationTypes), default=WorkspaceUserRelationTypes.MEMBER, nullable=False)
     start_date = db.Column(db.Date, default=datetime.datetime.now(), nullable=False)
 
     def get_worked_months(self):
@@ -97,3 +107,12 @@ class WorkspacePolicy(Base, Persistent):
     max_paid_vacations_per_year = db.Column(db.Integer)
     max_unpaid_vacations_per_year = db.Column(db.Integer)
     max_sick_leaves_per_year = db.Column(db.Integer)
+
+
+class WorkspaceUserRole(Base, Persistent):
+    __tablename__ = 'workspace_user_role'
+
+    ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, primary_key=True)
+    role = db.Column(db.Enum(WorkspaceUserRoles), default=WorkspaceUserRoles.MEMBER, nullable=False, primary_key=True)
+

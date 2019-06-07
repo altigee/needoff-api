@@ -45,18 +45,25 @@ class Query(graphene.ObjectType):
     team_calendar = graphene.List(types.DayOff, workspace_id=graphene.Int(required=True),
                                   resolver=resolvers.team_calendar)
 
+    day_offs_for_approval = graphene.List(types.DayOff,
+                                          workspace_id=graphene.Int(required=True),
+                                          resolver=resolvers.day_offs_for_approval)
+
 
 class Mutation(graphene.ObjectType):
     login = user.Login.Field()
     register = user.Register.Field()
     create_day_off = day_off.CreateDayOff.Field()
+    approve_day_off = day_off.ApproveDayOff.Field()
     create_workspace = workspace.CreateWorkspace.Field()
     add_workspace_member = workspace.AddMember.Field()
     update_workspace_member = workspace.UpdateMember.Field()
     remove_workspace_member = workspace.RemoveMember.Field()
+    add_user_role = workspace.AddUserRole.Field()
+    remove_user_role = workspace.RemoveUserRole.Field()
     add_holiday = workspace.AddHoliday.Field()
     remove_holiday = workspace.RemoveHoliday.Field()
-    set_policy = workspace.SetPolicy.Field()
+    set_workspace_policy = workspace.SetPolicy.Field()
 
 
 def create_schema(dump_to_file):

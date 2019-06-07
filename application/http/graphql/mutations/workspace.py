@@ -1,7 +1,7 @@
 import graphene, datetime, logging
 from application.auth.models import User as _UserModel
 from application.http.graphql import types
-from application.http.graphql.util import gql_jwt_required, current_user_or_error, current_user_in_workspace_or_error
+from application.http.graphql.util import gql_jwt_required, current_user_or_error, check_role_or_error
 from graphql import GraphQLError
 from application.shared.database import Persistent
 from application.workspace.models import (
@@ -11,7 +11,9 @@ from application.workspace.models import (
     WorkspaceInvitationStatus,
     WorkspaceUserRelationTypes,
     WorkspacePolicy,
-    WorkspaceHoliday
+    WorkspaceHoliday,
+    WorkspaceUserRole,
+    WorkspaceUserRoles
 )
 
 LOG = logging.getLogger("[mutations]")
@@ -28,28 +30,45 @@ class CreateWorkspace(graphene.Mutation):
 
     @gql_jwt_required
     def mutate(self, _, name, description, members):
+        now = datetime.datetime.now()
         user = current_user_or_error()
+
         try:
             new_ws = WorkspaceModel(name=name, description=description)
             new_ws.save()
             Persistent.flush()  # so we now have ID for new_ws
-            new_relation = WorkspaceUser(ws_id=new_ws.id,
-                                              user_id=user.id,
-                                              relation_type=WorkspaceUserRelationTypes.OWNER)
-            new_relation.save_and_persist()
+
+            WorkspaceUser(ws_id=new_ws.id, user_id=user.id, start_date=now).save()
+
+            for role in WorkspaceUserRoles.__members__:
+                WorkspaceUserRole(ws_id=new_ws.id, user_id=user.id, role=role).save()
+
             for email in members:
                 if email.strip() == user.email:
                     continue
                 wsi = WorkspaceInvitation(email=email, ws_id=new_ws.id)
                 # check if user with this email already exist
                 user_by_email = _UserModel.find_by_email(email=email)
+
                 if user_by_email:
-                    member_relation = WorkspaceUser(ws_id=new_ws.id,
-                                                         user_id=user_by_email.id,
-                                                         relation_type=WorkspaceUserRelationTypes.MEMBER)
-                    member_relation.save()
+                    WorkspaceUser(
+                        ws_id=new_ws.id,
+                        user_id=user_by_email.id,
+                        start_date=now
+                    ).save()
+
+                    WorkspaceUserRole(
+                        ws_id=new_ws.id,
+                        user_id=user_by_email.id,
+                        role=WorkspaceUserRoles.MEMBER
+                    ).save()
+
                     wsi.status = WorkspaceInvitationStatus.ACCEPTED
-                wsi.save_and_persist()
+
+                wsi.save()
+
+            Persistent.commit()
+
             return CreateWorkspace(ok=True, ws=new_ws)
         except Exception as e:
             LOG.error(f'Workspace creation failed. Error: {e}')
@@ -68,22 +87,21 @@ class SetPolicy(graphene.Mutation):
 
     @gql_jwt_required
     def mutate(self, _, ws_id, max_paid_vacations_per_year, max_unpaid_vacations_per_year, max_sick_leaves_per_year):
-        current_user_in_workspace_or_error(ws_id=ws_id, relation=WorkspaceUserRelationTypes.OWNER)
+        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
 
         try:
-            policy = WorkspacePolicy(ws_id=ws_id,
-                                     max_paid_vacations_per_year=max_paid_vacations_per_year,
-                                     max_unpaid_vacations_per_year=max_unpaid_vacations_per_year,
-                                     max_sick_leaves_per_year=max_sick_leaves_per_year
-                                     )
-            policy.save_and_persist()
+            WorkspacePolicy(
+                ws_id=ws_id,
+                max_paid_vacations_per_year=max_paid_vacations_per_year,
+                max_unpaid_vacations_per_year=max_unpaid_vacations_per_year,
+                max_sick_leaves_per_year=max_sick_leaves_per_year
+            ).save_and_persist()
 
             return SetPolicy(ok=True)
-
         except Exception as e:
-            LOG.error(f'Workspace creation failed. Error: {e}')
+            LOG.error(f'Workspace policy update failed. Error: {e}')
             Persistent.rollback()
-            raise GraphQLError('Workspace creation failed.')
+            raise GraphQLError('Workspace policy update failed.')
 
 
 class AddMember(graphene.Mutation):
@@ -96,7 +114,7 @@ class AddMember(graphene.Mutation):
 
     @gql_jwt_required
     def mutate(self, _, email, ws_id, start_date=None):
-        current_user_in_workspace_or_error(ws_id=ws_id, relation=WorkspaceUserRelationTypes.OWNER)
+        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
 
         start_date = start_date if start_date else datetime.datetime.utcnow()
 
@@ -105,11 +123,15 @@ class AddMember(graphene.Mutation):
             if user is None:
                 if WorkspaceInvitation.find(email=email, ws_id=ws_id) is None:
                     WorkspaceInvitation(email=email, ws_id=ws_id, start_date=start_date,
-                                        status=WorkspaceInvitationStatus.PENDING).save_and_persist()
+                                        status=WorkspaceInvitationStatus.PENDING).save()
             elif WorkspaceUser.find(user_id=user.id, ws_id=ws_id) is None:
                 WorkspaceInvitation(email=email, ws_id=ws_id, start_date=start_date,
                                     status=WorkspaceInvitationStatus.ACCEPTED).save()
-                WorkspaceUser(user_id=user.id, ws_id=ws_id, start_date=start_date).save_and_persist()
+
+                WorkspaceUser(user_id=user.id, ws_id=ws_id, start_date=start_date).save()
+
+            Persistent.commit()
+
             return AddMember(ok=True)
         except Exception as e:
             LOG.error(f'Could not add member into workspace. Error: {e}')
@@ -129,7 +151,7 @@ class UpdateMember(graphene.Mutation):
     @gql_jwt_required
     def mutate(self, _, ws_id, user_id, start_date):
 
-        current_user_in_workspace_or_error(ws_id=ws_id, relation=WorkspaceUserRelationTypes.OWNER)
+        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
 
         ws_user = WorkspaceUser.find(ws_id=ws_id, user_id=user_id)
 
@@ -143,7 +165,6 @@ class UpdateMember(graphene.Mutation):
             return UpdateMember(ok=True, member=ws_user)
         except Exception as e:
             LOG.error(f'Could not update the workspace member. Error: {e}')
-            Persistent.rollback()
             return GraphQLError('Could not update the workspace member.')
 
 
@@ -156,7 +177,7 @@ class RemoveMember(graphene.Mutation):
 
     @gql_jwt_required
     def mutate(self, _, email, ws_id):
-        current_user_in_workspace_or_error(ws_id=ws_id, elation=WorkspaceUserRelationTypes.OWNER)
+        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
 
         try:
             invitation = WorkspaceInvitation.find(ws_id=ws_id, email=email)
@@ -180,6 +201,52 @@ class RemoveMember(graphene.Mutation):
             return GraphQLError('Could not remove member from workspace.')
 
 
+class AddUserRole(graphene.Mutation):
+    class Arguments:
+        ws_id = graphene.Int()
+        user_id = graphene.Int()
+        role = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @gql_jwt_required
+    def mutate(self, _, ws_id, user_id, role):
+        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
+
+        if WorkspaceUserRole.find(ws_id=ws_id, user_id=user_id, role=role):
+            return AddUserRole(ok=True)
+
+        try:
+            WorkspaceUserRole(ws_id=ws_id, user_id=user_id, role=role).save_and_persist()
+            return AddUserRole(ok=True)
+        except Exception as e:
+            raise GraphQLError('Could not add a user role.')
+
+
+class RemoveUserRole(graphene.Mutation):
+    class Arguments:
+        ws_id = graphene.Int()
+        user_id = graphene.Int()
+        role = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @gql_jwt_required
+    def mutate(self, _, ws_id, user_id, role):
+        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
+
+        user_role = WorkspaceUserRole.find(ws_id=ws_id, user_id=user_id, role=role)
+
+        if not user_role:
+            return RemoveUserRole(ok=True)
+
+        try:
+            user_role.delete_and_persist()
+            return RemoveUserRole(ok=True)
+        except Exception as e:
+            raise GraphQLError('Could not remove a user role.')
+
+
 class AddHoliday(graphene.Mutation):
     class Arguments:
         ws_id = graphene.Int()
@@ -192,7 +259,7 @@ class AddHoliday(graphene.Mutation):
     @gql_jwt_required
     def mutate(self, _, ws_id, date, name):
 
-        current_user_in_workspace_or_error(ws_id=ws_id, relation=WorkspaceUserRelationTypes.OWNER)
+        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
 
         try:
             holiday = WorkspaceHoliday(name=name, ws_id=ws_id,date=date)
@@ -215,7 +282,7 @@ class RemoveHoliday(graphene.Mutation):
         if holiday is None:
             raise GraphQLError('Could not find holiday.')
 
-        current_user_in_workspace_or_error(ws_id=holiday.ws_id, relatione=WorkspaceUserRelationTypes.OWNER)
+        check_role_or_error(ws_id=holiday.ws_id, role=WorkspaceUserRoles.ADMIN)
 
         try:
             holiday.delete_and_persist()
