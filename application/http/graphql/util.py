@@ -12,19 +12,19 @@ def current_user_or_error(message="User not found"):
     return user
 
 
-def current_user_in_workspace_or_error(ws_id, message="Wrong association", relation=None):
+def current_user_in_workspace_or_error(ws_id, message="Wrong association"):
     user = current_user_or_error()
     find_kwargs = {
         "user_id": user.id,
         "ws_id": ws_id
     }
 
-    if relation is not None:
-        find_kwargs["relation_type"] = relation
 
     assoc = WorkspaceUser.find(**find_kwargs)
     if not assoc:
         raise GraphQLError(message)
+
+
     return user
 
 

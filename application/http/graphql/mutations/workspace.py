@@ -9,7 +9,6 @@ from application.workspace.models import (
     WorkspaceUser,
     WorkspaceInvitation,
     WorkspaceInvitationStatus,
-    WorkspaceUserRelationTypes,
     WorkspacePolicy,
     WorkspaceHoliday,
     WorkspaceUserRole,

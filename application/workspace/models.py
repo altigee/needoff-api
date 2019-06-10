@@ -10,11 +10,6 @@ class WorkspaceInvitationStatus(Enum):
     REVOKED = 2
 
 
-class WorkspaceUserRelationTypes(Enum):
-    OWNER = 0
-    MEMBER = 1
-
-
 class WorkspaceUserRoles(Enum):
     MEMBER = auto()
     APPROVER = auto()
@@ -76,9 +71,9 @@ class WorkspaceHoliday(Base, Persistent):
 
     @staticmethod
     def get_work_days_count(ws_id, start_date, end_date):
-        holidays = WorkspaceHoliday.query().\
-            filter(WorkspaceHoliday.date.between(start_date, end_date)).\
-            filter(WorkspaceHoliday.ws_id == ws_id).\
+        holidays = WorkspaceHoliday.query(). \
+            filter(WorkspaceHoliday.date.between(start_date, end_date)). \
+            filter(WorkspaceHoliday.ws_id == ws_id). \
             all()
         result = 0
         holiday_dates = set(map(lambda h: h.date, holidays))
@@ -115,4 +110,3 @@ class WorkspaceUserRole(Base, Persistent):
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, primary_key=True)
     role = db.Column(db.Enum(WorkspaceUserRoles), default=WorkspaceUserRoles.MEMBER, nullable=False, primary_key=True)
-

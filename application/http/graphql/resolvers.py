@@ -11,8 +11,8 @@ from application.workspace.models import (
     WorkspaceInvitation,
     WorkspacePolicy,
     WorkspaceUser,
-    WorkspaceUserRelationTypes,
     WorkspaceHoliday,
+    WorkspaceUserRole,
     WorkspaceUserRoles
 )
 from application.http.graphql.util import (
@@ -21,6 +21,7 @@ from application.http.graphql.util import (
     current_user_in_workspace_or_error,
     check_role_or_error
 )
+
 
 @gql_jwt_required
 def user_by_name(_, info, email):
@@ -36,7 +37,6 @@ def my_leaves(_, info, workspace_id):
 # TODO: Consider using business rules engine to make this logic customizable per workspace.
 @gql_jwt_required
 def my_balance(_, info, workspace_id):
-
     user = current_user_in_workspace_or_error(ws_id=workspace_id)
 
     policy = WorkspacePolicy.find(ws_id=workspace_id)
@@ -44,10 +44,10 @@ def my_balance(_, info, workspace_id):
     if policy is None:
         raise GraphQLError('No policies defined for workspace.')
 
-    leaves = _DayOff.query().\
-        filter(_DayOff.user_id == user.id).\
-        filter(_DayOff.workspace_id == workspace_id).\
-        filter(_DayOff.approved_by_id != None).\
+    leaves = _DayOff.query(). \
+        filter(_DayOff.user_id == user.id). \
+        filter(_DayOff.workspace_id == workspace_id). \
+        filter(_DayOff.approved_by_id != None). \
         all()
     ws_user = WorkspaceUser.find(user_id=user.id, ws_id=workspace_id)
     worked_months = ws_user.get_worked_months()
@@ -113,9 +113,12 @@ def workspace_by_id(_, info, workspace_id):
 
 @gql_jwt_required
 def workspace_owner(_, info, workspace_id):
-    user = current_user_in_workspace_or_error(ws_id=workspace_id, relation=WorkspaceUserRelationTypes.OWNER)
+    user = current_user_in_workspace_or_error(ws_id=workspace_id)
+    owner_role = WorkspaceUserRole.find(ws_id=workspace_id, role=WorkspaceUserRoles.OWNER)
+    if owner_role is None:
+        raise GraphQLError("Failed to load workspace owner")
     try:
-        return _UserProfile.find_by_user_id(user.id)
+        return _UserProfile.find_by_user_id(user_id=owner_role.user_id)
     except Exception:
         return None
 
@@ -125,6 +128,7 @@ def workspace_invitations(_, info, workspace_id):
     _ = current_user_in_workspace_or_error(ws_id=workspace_id)
     return db.session.query(WorkspaceInvitation).filter_by(ws_id=workspace_id).order_by(
         WorkspaceInvitation.status.desc()).all()
+
 
 @gql_jwt_required
 def workspace_holidays(_, info, workspace_id):
@@ -143,7 +147,7 @@ def team_calendar(_, info, workspace_id):
 def day_offs_for_approval(_, info, workspace_id):
     check_role_or_error(ws_id=workspace_id, role=WorkspaceUserRoles.APPROVER)
 
-    return _DayOff.query().\
-        filter(_DayOff.workspace_id == workspace_id).\
-        filter(_DayOff.approved_by_id == None).\
+    return _DayOff.query(). \
+        filter(_DayOff.workspace_id == workspace_id). \
+        filter(_DayOff.approved_by_id == None). \
         all()
