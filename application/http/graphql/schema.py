@@ -38,9 +38,9 @@ class Query(graphene.ObjectType):
                                           workspace_id=graphene.Int(required=True),
                                           resolver=resolvers.workspace_invitations)
 
-    workspace_holidays = graphene.List(types.Holiday,
-                                       workspace_id=graphene.Int(required=True),
-                                       resolver=resolvers.workspace_holidays)
+    workspace_dates = graphene.List(types.WorkspaceDate,
+                                    workspace_id=graphene.Int(required=True),
+                                    resolver=resolvers.workspace_dates)
 
     team_calendar = graphene.List(types.DayOff, workspace_id=graphene.Int(required=True),
                                   resolver=resolvers.team_calendar)
@@ -61,8 +61,8 @@ class Mutation(graphene.ObjectType):
     remove_workspace_member = workspace.RemoveMember.Field()
     add_user_role = workspace.AddUserRole.Field()
     remove_user_role = workspace.RemoveUserRole.Field()
-    add_holiday = workspace.AddHoliday.Field()
-    remove_holiday = workspace.RemoveHoliday.Field()
+    add_workspace_date = workspace.AddWorkspaceDate.Field()
+    remove_workspace_date = workspace.RemoveWorkspaceDate.Field()
     set_workspace_policy = workspace.SetPolicy.Field()
 
 

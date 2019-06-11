@@ -11,7 +11,7 @@ from application.workspace.models import (
     WorkspaceInvitation,
     WorkspacePolicy,
     WorkspaceUser,
-    WorkspaceHoliday,
+    WorkspaceDate,
     WorkspaceUserRole,
     WorkspaceUserRoles
 )
@@ -53,9 +53,9 @@ def my_balance(_, info, workspace_id):
     worked_months = ws_user.get_worked_months()
 
     allowed_count_map = {
-        LeaveTypes.SICK_LEAVE.name: policy.max_sick_leaves_per_year * worked_months / 12,
-        LeaveTypes.VACATION_PAID.name: policy.max_paid_vacations_per_year * worked_months / 12,
-        LeaveTypes.VACATION_UNPAID.name: policy.max_unpaid_vacations_per_year * worked_months / 12,
+        LeaveTypes.SICK_LEAVE.name: policy.max_sick_leaves_per_year * worked_months // 12,
+        LeaveTypes.VACATION_PAID.name: policy.max_paid_vacations_per_year * worked_months // 12,
+        LeaveTypes.VACATION_UNPAID.name: policy.max_unpaid_vacations_per_year * worked_months // 12,
     }
 
     used_leaves_count_map = {t: 0 for t in LeaveTypes.__members__}
@@ -65,7 +65,7 @@ def my_balance(_, info, workspace_id):
         if not (leave_type in used_leaves_count_map):
             continue  # Huh?
 
-        work_days_count = WorkspaceHoliday.get_work_days_count(workspace_id, leave.start_date, leave.end_date)
+        work_days_count = WorkspaceDate.get_work_days_count(workspace_id, leave.start_date, leave.end_date)
         used_leaves_count_map[leave_type] += work_days_count
 
     result = {}
@@ -131,10 +131,10 @@ def workspace_invitations(_, info, workspace_id):
 
 
 @gql_jwt_required
-def workspace_holidays(_, info, workspace_id):
+def workspace_dates(_, info, workspace_id):
     current_user_in_workspace_or_error(ws_id=workspace_id)
 
-    return WorkspaceHoliday.find_all(ws_id=workspace_id)
+    return WorkspaceDate.find_all(ws_id=workspace_id)
 
 
 @gql_jwt_required

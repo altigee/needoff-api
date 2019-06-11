@@ -1,6 +1,6 @@
 import graphene, logging
 from application.balances.models import DayOff, LeaveTypes, is_valid_leave_type
-from application.workspace.models import WorkspaceUser, WorkspaceHoliday, WorkspaceUserRoles
+from application.workspace.models import WorkspaceUser, WorkspaceDate, WorkspaceUserRoles
 from application.http.graphql import types
 from graphql import GraphQLError
 from application.http.graphql.util import (
@@ -50,7 +50,7 @@ class CreateDayOff(graphene.Mutation):
         if ws_user.get_worked_months() < 3 and type == LeaveTypes.VACATION_PAID.name:
             raise GraphQLError("Paid vacations are only allowed after 3 months probation period")
 
-        if WorkspaceHoliday.get_work_days_count(workspace_id, start_date, end_date) > 10:
+        if WorkspaceDate.get_work_days_count(workspace_id, start_date, end_date) > 10:
             raise GraphQLError("Date range cannot exceed 10 business days")
 
         if len(submitted_leaves) > 0:

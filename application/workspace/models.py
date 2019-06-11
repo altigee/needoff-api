@@ -61,33 +61,31 @@ class WorkspaceInvitation(Base, Persistent):
     start_date = db.Column(db.Date, nullable=True)
 
 
-class WorkspaceHoliday(Base, Persistent):
-    __tablename__ = 'workspace_holiday'
+class WorkspaceDate(Base, Persistent):
+    __tablename__ = 'workspace_date'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'))
     date = db.Column(db.Date, nullable=False)
+    is_official_holiday = db.Column(db.Boolean(), nullable=True)
 
     @staticmethod
     def get_work_days_count(ws_id, start_date, end_date):
-        holidays = WorkspaceHoliday.query(). \
-            filter(WorkspaceHoliday.date.between(start_date, end_date)). \
-            filter(WorkspaceHoliday.ws_id == ws_id). \
+        holidays = WorkspaceDate.query(). \
+            filter(WorkspaceDate.date.between(start_date, end_date)). \
+            filter(WorkspaceDate.ws_id == ws_id). \
+            filter(WorkspaceDate.is_official_holiday is True). \
             all()
+
         result = 0
-        holiday_dates = set(map(lambda h: h.date, holidays))
+
+        holiday_dates = map(lambda h: h.date, holidays)
 
         date = start_date
 
         while date <= end_date:
-            is_holiday = False
-            for holiday_date in holiday_dates:
-                if date == holiday_date:
-                    is_holiday = True
-                    break
-
-            if date.weekday() < 5 and not is_holiday:
+            if date.weekday() < 5 and date not in holiday_dates:
                 result += 1
 
             date = date + datetime.timedelta(days=1)

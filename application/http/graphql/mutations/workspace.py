@@ -10,7 +10,7 @@ from application.workspace.models import (
     WorkspaceInvitation,
     WorkspaceInvitationStatus,
     WorkspacePolicy,
-    WorkspaceHoliday,
+    WorkspaceDate,
     WorkspaceUserRole,
     WorkspaceUserRoles
 )
@@ -246,29 +246,30 @@ class RemoveUserRole(graphene.Mutation):
             raise GraphQLError('Could not remove a user role.')
 
 
-class AddHoliday(graphene.Mutation):
+class AddWorkspaceDate(graphene.Mutation):
     class Arguments:
         ws_id = graphene.Int()
         date = graphene.Date()
         name = graphene.String()
+        is_official_holiday = graphene.Boolean()
 
     ok = graphene.Boolean()
-    holiday = graphene.Field(lambda: types.Holiday)
+    workspace_date = graphene.Field(lambda: types.WorkspaceDate)
 
     @gql_jwt_required
-    def mutate(self, _, ws_id, date, name):
+    def mutate(self, _, ws_id, date, name, is_official_holiday):
 
         check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
 
         try:
-            holiday = WorkspaceHoliday(name=name, ws_id=ws_id,date=date)
-            holiday.save_and_persist()
-            return AddHoliday(ok=True, holiday=holiday)
+            workspace_date = WorkspaceDate(name=name, ws_id=ws_id, date=date, is_official_holiday=is_official_holiday)
+            workspace_date.save_and_persist()
+            return AddWorkspaceDate(ok=True, workspace_date=workspace_date)
         except Exception as e:
             raise GraphQLError('Could not add a holiday.')
 
 
-class RemoveHoliday(graphene.Mutation):
+class RemoveWorkspaceDate(graphene.Mutation):
     class Arguments:
         id = graphene.Int()
 
@@ -276,7 +277,7 @@ class RemoveHoliday(graphene.Mutation):
 
     @gql_jwt_required
     def mutate(self, _, id):
-        holiday = WorkspaceHoliday.find(id=id)
+        holiday = WorkspaceDate.find(id=id)
 
         if holiday is None:
             raise GraphQLError('Could not find holiday.')
@@ -286,7 +287,7 @@ class RemoveHoliday(graphene.Mutation):
         try:
             holiday.delete_and_persist()
 
-            return RemoveHoliday(ok=True)
+            return RemoveWorkspaceDate(ok=True)
         except Exception as e:
             raise GraphQLError('Could not remove a holiday.')
 

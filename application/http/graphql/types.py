@@ -7,7 +7,7 @@ from application.users.models import UserProfile as ProfileModel
 from application.workspace.models import (
     WorkspaceModel,
     WorkspaceInvitation as WorkspaceInvitationModel,
-    WorkspaceHoliday as HolidayModel,
+    WorkspaceDate as WorkspaceDateModel,
     WorkspaceUser as WorkspaceUserModel
 )
 
@@ -53,6 +53,6 @@ class WorkspaceInvitation(SQLAlchemyObjectType):
         model = WorkspaceInvitationModel
 
 
-class Holiday(SQLAlchemyObjectType):
+class WorkspaceDate(SQLAlchemyObjectType):
     class Meta:
-        model = HolidayModel
+        model = WorkspaceDateModel
