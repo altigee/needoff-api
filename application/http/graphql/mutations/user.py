@@ -1,19 +1,22 @@
-import graphene
+import graphene, datetime, logging
 from application.auth.models import User as _UserModel
+from application.users.models import UserProfile
+from graphql import GraphQLError
+from application.shared.database import db, Persistent
+
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
     decode_token
 )
-from application.workspace.models import (WorkspaceUserModel,
-                                          WorkspaceInvitation,
-                                          WorkspaceInvitationStatus
-                                          )
-from application.users.models import UserProfile
-from graphql import GraphQLError
-from application.shared.database import db, Persistent
-import datetime
-import logging
+from application.workspace.models import (
+    WorkspaceUser,
+    WorkspaceInvitation,
+    WorkspaceInvitationStatus,
+    WorkspaceUserRole,
+    WorkspaceUserRoles,
+)
+
 
 LOG = logging.getLogger("[mutations]")
 
@@ -31,19 +34,18 @@ class Login(graphene.Mutation):
         current_user = _UserModel.find_by_email(email)
         if not current_user:
             LOG.warning(f'Non-existing user {email} login')
-            raise GraphQLError('Wrong cedentials')
+            raise GraphQLError('Wrong credentials')
 
-        if _UserModel.verify_hash(password, current_user.password):
-            access_token = create_access_token(current_user.email)
-            refresh_token = create_refresh_token(current_user.email)
-            current_user.jti = decode_token(refresh_token)['jti']
-            current_user.save_and_persist()
-            return Login(ok=True,
-                         access_token=access_token,
-                         refresh_token=refresh_token)
-        else:
+        if not _UserModel.verify_hash(password, current_user.password):
             LOG.warning(f'Wrong credentials for user {email}')
             raise GraphQLError('Wrong credentials')
+
+        access_token = create_access_token(current_user.email)
+        refresh_token = create_refresh_token(current_user.email)
+        current_user.jti = decode_token(refresh_token)['jti']
+        current_user.save_and_persist()
+
+        return Login(ok=True, access_token=access_token, refresh_token=refresh_token)
 
 
 class UserData(graphene.InputObjectType):
@@ -99,14 +101,22 @@ class Register(graphene.Mutation):
                 for inv in pending_invitations:
                     if inv.ws_id not in processed_ws_ids:
                         processed_ws_ids.add(inv.ws_id)
-                        db.session.add(WorkspaceUserModel(user_id=new_user.id,
-                                                          ws_id=inv.ws_id,
-                                                          start_date=datetime.datetime.now()))
+                        WorkspaceUser(user_id=new_user.id,
+                                      ws_id=inv.ws_id,
+                                      start_date=datetime.datetime.now()
+                                      ).save()
+
+                        WorkspaceUserRole(ws_id=inv.ws_id,
+                                          user_id=new_user.id,
+                                          role=WorkspaceUserRoles.MEMBER
+                                          ).save()
+
                     inv.status = WorkspaceInvitationStatus.ACCEPTED
-                    db.session.query(WorkspaceInvitation) \
+                    WorkspaceInvitation.query() \
                         .filter(WorkspaceInvitation.id == inv.id) \
                         .update({WorkspaceInvitation.status: inv.status})
-                db.session.commit()
+
+                Persistent.commit()
             except Exception as e:
                 LOG.error(f"Workspace invitations check failed for user {new_user.email}. Error: {e}")
                 db.session.rollback()

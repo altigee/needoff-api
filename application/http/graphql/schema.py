@@ -1,7 +1,7 @@
 import graphene
 import application.http.graphql.types as types
 import application.http.graphql.resolvers as resolvers
-from application.http.graphql.mutations import user, day_off, holiday_calendar, workspace
+from application.http.graphql.mutations import user, day_off, workspace
 
 
 class Query(graphene.ObjectType):
@@ -13,7 +13,9 @@ class Query(graphene.ObjectType):
                               workspace_id=graphene.Int(required=True),
                               resolver=resolvers.my_leaves)
 
-    my_balance = graphene.List(types.Balance, resolver=resolvers.my_balance)
+    my_balance = graphene.Field(types.Balance,
+                                workspace_id=graphene.Int(required=True),
+                                resolver=resolvers.my_balance)
 
     balance_by_user = graphene.List(types.Balance,
                                     email=graphene.String(required=True),
@@ -36,33 +38,32 @@ class Query(graphene.ObjectType):
                                           workspace_id=graphene.Int(required=True),
                                           resolver=resolvers.workspace_invitations)
 
-    workspace_calendars = graphene.List(types.WorkspaceHolidayCalendar,
-                                        workspace_id=graphene.Int(required=True),
-                                        resolver=resolvers.workspace_calendars)
-
-    workspace_calendar_by_id = graphene.Field(types.WorkspaceHolidayCalendar,
-                                              calendar_id=graphene.Int(required=True),
-                                              resolver=resolvers.workspace_calendar_by_id)
-
-    calendar_holidays = graphene.List(types.Holiday,
-                                      calendar_id=graphene.Int(required=True),
-                                      resolver=resolvers.calendar_holidays)
+    workspace_dates = graphene.List(types.WorkspaceDate,
+                                    workspace_id=graphene.Int(required=True),
+                                    resolver=resolvers.workspace_dates)
 
     team_calendar = graphene.List(types.DayOff, workspace_id=graphene.Int(required=True),
                                   resolver=resolvers.team_calendar)
+
+    day_offs_for_approval = graphene.List(types.DayOff,
+                                          workspace_id=graphene.Int(required=True),
+                                          resolver=resolvers.day_offs_for_approval)
 
 
 class Mutation(graphene.ObjectType):
     login = user.Login.Field()
     register = user.Register.Field()
     create_day_off = day_off.CreateDayOff.Field()
+    approve_day_off = day_off.ApproveDayOff.Field()
     create_workspace = workspace.CreateWorkspace.Field()
     add_workspace_member = workspace.AddMember.Field()
+    update_workspace_member = workspace.UpdateMember.Field()
     remove_workspace_member = workspace.RemoveMember.Field()
-    create_workspace_calendar = holiday_calendar.CreateCalendar.Field()
-    remove_workspace_calendar = holiday_calendar.RemoveCalendar.Field()
-    add_holiday = holiday_calendar.AddHoliday.Field()
-    remove_holiday = holiday_calendar.RemoveHoliday.Field()
+    add_user_role = workspace.AddUserRole.Field()
+    remove_user_role = workspace.RemoveUserRole.Field()
+    add_workspace_date = workspace.AddWorkspaceDate.Field()
+    remove_workspace_date = workspace.RemoveWorkspaceDate.Field()
+    set_workspace_policy = workspace.SetPolicy.Field()
 
 
 def create_schema(dump_to_file):

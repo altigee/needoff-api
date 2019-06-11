@@ -1,14 +1,14 @@
 from graphene_sqlalchemy import SQLAlchemyObjectType
+import graphene
 
 from application.auth.models import User as UserModel
-from application.balances.models import Balance as BalanceModel
 from application.balances.models import DayOff as DayOffModel
 from application.users.models import UserProfile as ProfileModel
 from application.workspace.models import (
     WorkspaceModel,
     WorkspaceInvitation as WorkspaceInvitationModel,
-    HolidayCalendar as HolidayCalendarModel,
-    Holiday as HolidayModel
+    WorkspaceDate as WorkspaceDateModel,
+    WorkspaceUser as WorkspaceUserModel
 )
 
 
@@ -23,9 +23,14 @@ class DayOff(SQLAlchemyObjectType):
         model = DayOffModel
 
 
-class Balance(SQLAlchemyObjectType):
-    class Meta:
-        model = BalanceModel
+class Balance(graphene.ObjectType):
+    left_paid_leaves = graphene.Int()
+    left_unpaid_leaves = graphene.Int()
+    left_sick_leaves = graphene.Int()
+
+    total_paid_leaves = graphene.Int()
+    total_unpaid_leaves = graphene.Int()
+    total_sick_leaves = graphene.Int()
 
 
 class Profile(SQLAlchemyObjectType):
@@ -38,16 +43,16 @@ class Workspace(SQLAlchemyObjectType):
         model = WorkspaceModel
 
 
+class WorkspaceUser(SQLAlchemyObjectType):
+    class Meta:
+        model = WorkspaceUserModel
+
+
 class WorkspaceInvitation(SQLAlchemyObjectType):
     class Meta:
         model = WorkspaceInvitationModel
 
 
-class WorkspaceHolidayCalendar(SQLAlchemyObjectType):
+class WorkspaceDate(SQLAlchemyObjectType):
     class Meta:
-        model = HolidayCalendarModel
-
-
-class Holiday(SQLAlchemyObjectType):
-    class Meta:
-        model = HolidayModel
+        model = WorkspaceDateModel

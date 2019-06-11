@@ -1,8 +1,7 @@
 import datetime
 from application.shared.database import db, Base, Persistent
 import uuid
-from enum import Enum
-from sqlalchemy.orm import relationship
+from enum import Enum, auto
 
 
 class WorkspaceInvitationStatus(Enum):
@@ -11,9 +10,15 @@ class WorkspaceInvitationStatus(Enum):
     REVOKED = 2
 
 
-class WorkspaceUserRelationTypes(Enum):
-    OWNER = 0
-    MEMBER = 1
+class WorkspaceUserRoles(Enum):
+    MEMBER = auto()
+    APPROVER = auto()
+    ADMIN = auto()
+    OWNER = auto()
+
+    @classmethod
+    def is_valid_role(cls, role):
+        return role in cls.__members__
 
 
 class WorkspaceModel(Base, Persistent):
@@ -30,17 +35,20 @@ class WorkspaceModel(Base, Persistent):
 
     @classmethod
     def find_by_user_id(cls, user_id):
-        ws_ids = [x.ws_id for x in WorkspaceUserModel.find_all(user_id=user_id)]
+        ws_ids = [x.ws_id for x in WorkspaceUser.find_all(user_id=user_id)]
         return cls.query().filter(WorkspaceModel.id.in_(ws_ids))
 
 
-class WorkspaceUserModel(Base, Persistent):
+class WorkspaceUser(Base, Persistent):
     __tablename__ = 'workspace_user'
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), primary_key=True)
-    relation_type = db.Column(db.Enum(WorkspaceUserRelationTypes), default=WorkspaceUserRelationTypes.MEMBER, nullable=False)
     start_date = db.Column(db.Date, default=datetime.datetime.now(), nullable=False)
+
+    def get_worked_months(self):
+        now = datetime.datetime.now()
+        return (now.year - self.start_date.year) * 12 + now.month - self.start_date.month
 
 
 class WorkspaceInvitation(Base, Persistent):
@@ -53,18 +61,50 @@ class WorkspaceInvitation(Base, Persistent):
     start_date = db.Column(db.Date, nullable=True)
 
 
-class HolidayCalendar(Base, Persistent):
-    __tablename__ = 'holiday_calendar'
+class WorkspaceDate(Base, Persistent):
+    __tablename__ = 'workspace_date'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'))
-
-
-class Holiday(Base, Persistent):
-    __tablename__ = 'holiday'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    calendar_id = db.Column(db.Integer, db.ForeignKey('holiday_calendar.id'))
     date = db.Column(db.Date, nullable=False)
+    is_official_holiday = db.Column(db.Boolean(), nullable=True)
+
+    @staticmethod
+    def get_work_days_count(ws_id, start_date, end_date):
+        holidays = WorkspaceDate.query(). \
+            filter(WorkspaceDate.date.between(start_date, end_date)). \
+            filter(WorkspaceDate.ws_id == ws_id). \
+            filter(WorkspaceDate.is_official_holiday is True). \
+            all()
+
+        result = 0
+
+        holiday_dates = map(lambda h: h.date, holidays)
+
+        date = start_date
+
+        while date <= end_date:
+            if date.weekday() < 5 and date not in holiday_dates:
+                result += 1
+
+            date = date + datetime.timedelta(days=1)
+
+        return result
+
+
+class WorkspacePolicy(Base, Persistent):
+    __tablename__ = 'workspace_policy'
+
+    ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False, primary_key=True)
+    max_paid_vacations_per_year = db.Column(db.Integer)
+    max_unpaid_vacations_per_year = db.Column(db.Integer)
+    max_sick_leaves_per_year = db.Column(db.Integer)
+
+
+class WorkspaceUserRole(Base, Persistent):
+    __tablename__ = 'workspace_user_role'
+
+    ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, primary_key=True)
+    role = db.Column(db.Enum(WorkspaceUserRoles), default=WorkspaceUserRoles.MEMBER, nullable=False, primary_key=True)

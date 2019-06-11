@@ -3,25 +3,30 @@ schema {
   mutation: Mutation
 }
 
-type AddHoliday {
-  ok: Boolean
-  holiday: Holiday
-}
-
 type AddMember {
   ok: Boolean
 }
 
-type Balance {
-  id: ID!
-  userId: Int!
-  balanceType: String!
-  amount: Int!
+type AddUserRole {
+  ok: Boolean
 }
 
-type CreateCalendar {
+type AddWorkspaceDate {
   ok: Boolean
-  calendar: WorkspaceHolidayCalendar
+  workspaceDate: WorkspaceDate
+}
+
+type ApproveDayOff {
+  ok: Boolean
+}
+
+type Balance {
+  leftPaidLeaves: Int
+  leftUnpaidLeaves: Int
+  leftSickLeaves: Int
+  totalPaidLeaves: Int
+  totalUnpaidLeaves: Int
+  totalSickLeaves: Int
 }
 
 type CreateDayOff {
@@ -52,13 +57,6 @@ type DayOff {
   workspace: Workspace
 }
 
-type Holiday {
-  id: ID!
-  name: String!
-  calendarId: Int
-  date: String!
-}
-
 enum LeaveTypes {
   SICK_LEAVE
   VACATION_PAID
@@ -76,13 +74,16 @@ type Mutation {
   login(email: String, password: String): Login
   register(email: String, password: String, userData: UserData): Register
   createDayOff(comment: String, endDate: Date, startDate: Date, type: String, workspaceId: Int): CreateDayOff
+  approveDayOff(dayOffId: Int): ApproveDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
   addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddMember
+  updateWorkspaceMember(startDate: Date, userId: Int, wsId: Int): UpdateMember
   removeWorkspaceMember(email: String, wsId: Int): RemoveMember
-  createWorkspaceCalendar(name: String, wsId: Int): CreateCalendar
-  removeWorkspaceCalendar(id: Int): RemoveCalendar
-  addHoliday(calendarId: Int, date: Date, name: String): AddHoliday
-  removeHoliday(id: Int): RemoveHoliday
+  addUserRole(role: String, userId: Int, wsId: Int): AddUserRole
+  removeUserRole(role: String, userId: Int, wsId: Int): RemoveUserRole
+  addWorkspaceDate(date: Date, isOfficialHoliday: Boolean, name: String, wsId: Int): AddWorkspaceDate
+  removeWorkspaceDate(id: Int): RemoveWorkspaceDate
+  setWorkspacePolicy(maxPaidVacationsPerYear: Int, maxSickLeavesPerYear: Int, maxUnpaidVacationsPerYear: Int, wsId: Int): SetPolicy
 }
 
 type Profile {
@@ -98,17 +99,16 @@ type Profile {
 type Query {
   userByName(email: String!): User
   myLeaves(workspaceId: Int!): [DayOff]
-  myBalance: [Balance]
+  myBalance(workspaceId: Int!): Balance
   balanceByUser(email: String!): [Balance]
   profile: Profile
   myWorkspaces: [Workspace]
   workspaceById(workspaceId: Int!): Workspace
   workspaceOwner(workspaceId: Int!): Profile
   workspaceInvitations(workspaceId: Int!): [WorkspaceInvitation]
-  workspaceCalendars(workspaceId: Int!): [WorkspaceHolidayCalendar]
-  workspaceCalendarById(calendarId: Int!): WorkspaceHolidayCalendar
-  calendarHolidays(calendarId: Int!): [Holiday]
+  workspaceDates(workspaceId: Int!): [WorkspaceDate]
   teamCalendar(workspaceId: Int!): [DayOff]
+  dayOffsForApproval(workspaceId: Int!): [DayOff]
 }
 
 type Register {
@@ -118,16 +118,25 @@ type Register {
   refreshToken: String
 }
 
-type RemoveCalendar {
-  ok: Boolean
-}
-
-type RemoveHoliday {
-  ok: Boolean
-}
-
 type RemoveMember {
   ok: Boolean
+}
+
+type RemoveUserRole {
+  ok: Boolean
+}
+
+type RemoveWorkspaceDate {
+  ok: Boolean
+}
+
+type SetPolicy {
+  ok: Boolean
+}
+
+type UpdateMember {
+  ok: Boolean
+  member: WorkspaceUser
 }
 
 type User {
@@ -148,10 +157,12 @@ type Workspace {
   invitationLinkToken: String
 }
 
-type WorkspaceHolidayCalendar {
+type WorkspaceDate {
   id: ID!
   name: String!
   wsId: Int
+  date: String!
+  isOfficialHoliday: Boolean
 }
 
 type WorkspaceInvitation {
@@ -166,4 +177,10 @@ enum WorkspaceInvitationStatus {
   ACCEPTED
   PENDING
   REVOKED
+}
+
+type WorkspaceUser {
+  userId: ID!
+  wsId: ID!
+  startDate: String!
 }
