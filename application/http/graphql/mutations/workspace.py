@@ -74,6 +74,31 @@ class CreateWorkspace(graphene.Mutation):
             Persistent.rollback()
             raise GraphQLError('Workspace creation failed.')
 
+class UpdateWorkspace(graphene.Mutation):
+    class Arguments:
+        ws_id = graphene.Int()
+        name = graphene.String()
+        description = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @gql_jwt_required
+    def mutate(self, _, ws_id, name, description):
+        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
+        ws = WorkspaceModel.find_by_id(ws_id)
+        if ws is None:
+            raise GraphQLError('Workspace not found.')
+        try:
+            if name is not None:
+                ws.name = name
+            if description is not None:
+                ws.description = description
+            ws.save_and_persist()
+            return UpdateWorkspace(ok=True)
+        except Exception as e:
+            LOG.error(f'Workspace update failed. Error: {e}')
+            Persistent.rollback()
+            raise GraphQLError('Workspace update failed.')
 
 class SetPolicy(graphene.Mutation):
     class Arguments:

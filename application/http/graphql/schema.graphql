@@ -76,6 +76,7 @@ type Mutation {
   createDayOff(comment: String, endDate: Date, startDate: Date, type: String, workspaceId: Int): CreateDayOff
   approveDayOff(dayOffId: Int): ApproveDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
+  updateWorkspace(description: String, name: String, wsId: Int): UpdateWorkspace
   addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddMember
   updateWorkspaceMember(startDate: Date, userId: Int, wsId: Int): UpdateMember
   removeWorkspaceMember(email: String, wsId: Int): RemoveMember
@@ -137,6 +138,10 @@ type SetPolicy {
 type UpdateMember {
   ok: Boolean
   member: WorkspaceUser
+}
+
+type UpdateWorkspace {
+  ok: Boolean
 }
 
 type User {

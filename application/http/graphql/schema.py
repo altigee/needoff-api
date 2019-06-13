@@ -56,6 +56,7 @@ class Mutation(graphene.ObjectType):
     create_day_off = day_off.CreateDayOff.Field()
     approve_day_off = day_off.ApproveDayOff.Field()
     create_workspace = workspace.CreateWorkspace.Field()
+    update_workspace = workspace.UpdateWorkspace.Field()
     add_workspace_member = workspace.AddMember.Field()
     update_workspace_member = workspace.UpdateMember.Field()
     remove_workspace_member = workspace.RemoveMember.Field()
