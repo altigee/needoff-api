@@ -1,0 +1,45 @@
+from application.rules.models import BalanceCalculationRulePayload, LeaveDay
+from application.balances.models import LeaveTypes
+import datetime
+
+used_paid_leaves = 0
+used_unpaid_leaves = 0
+used_sick_leaves = 0
+
+
+rule calculate_paid_leaves:
+    when:
+        $leave_day := LeaveDay(leave.leave_type == LeaveTypes.VACATION_PAID and is_official_holiday != True and date.weekday() < 5 and leave.approved_by_id != None)
+    then:
+        attribute used_paid_leaves = used_paid_leaves + 1
+
+
+rule calculate_unpaid_leaves:
+    when:
+        $leave_day := LeaveDay(leave.leave_type == LeaveTypes.VACATION_UNPAID and is_official_holiday != True and date.weekday() < 5 and leave.approved_by_id != None)
+    then:
+        attribute used_unpaid_leaves = used_unpaid_leaves + 1
+
+
+rule calculate_sick_leaves:
+    when:
+        $leave_day := LeaveDay(leave.leave_type == LeaveTypes.SICK_LEAVE and is_official_holiday != True and date.weekday() < 5 and leave.approved_by_id != None)
+    then:
+        attribute used_unpaid_leaves = used_unpaid_leaves + 1
+
+
+rule calculate_totals:
+    when:
+        $payload := BalanceCalculationRulePayload()
+    then:
+        attribute now = datetime.datetime.now()
+        attribute worked_months = (now.year - $payload.start_date.year) * 12 + now.month - $payload.start_date.month
+        print("worked months = {0}".format(worked_months))
+
+        modify $payload:
+            total_paid_leaves = 18 * worked_months // 12
+            total_unpaid_leaves = 30 * worked_months // 12
+            total_sick_leaves = 10 * worked_months // 12
+            left_paid_leaves = $payload.total_paid_leaves - used_paid_leaves
+            left_unpaid_leaves = $payload.total_unpaid_leaves - used_unpaid_leaves
+            left_sick_leaves = $payload.total_sick_leaves - used_sick_leaves

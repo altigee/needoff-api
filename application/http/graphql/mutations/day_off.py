@@ -1,8 +1,9 @@
 import graphene, logging
-from application.balances.models import DayOff, LeaveTypes, is_valid_leave_type
-from application.workspace.models import WorkspaceUser, WorkspaceDate, WorkspaceUserRoles
+from application.balances.models import DayOff
 from application.http.graphql import types
 from graphql import GraphQLError
+from application.workspace.models import WorkspaceUserRoles
+from application.rules.models import execute_day_off_validation_rule
 from application.http.graphql.util import (
     gql_jwt_required,
     current_user_in_workspace_or_error,
@@ -23,53 +24,42 @@ class CreateDayOff(graphene.Mutation):
 
     ok = graphene.Boolean()
     day_off = graphene.Field(lambda: types.DayOff)
+    errors = graphene.List(of_type=graphene.String)
+    warnings = graphene.List(of_type=graphene.String)
+    notes = graphene.List(of_type=graphene.String)
 
     @gql_jwt_required
     def mutate(self, _, type, start_date, end_date, workspace_id, comment):
+
         user = current_user_in_workspace_or_error(ws_id=workspace_id)
-        ws_user = WorkspaceUser.find(user_id=user.id, ws_id=workspace_id)
-        submitted_leaves = DayOff.query().\
-            filter(DayOff.start_date <= end_date).\
-            filter(DayOff.end_date >= start_date).\
-            all()
 
-        if not ws_user:
-            raise GraphQLError('Invalid workspace')
+        day_off = DayOff(
+            leave_type=type,
+            start_date=start_date,
+            end_date=end_date,
+            workspace_id=workspace_id,
+            comment=comment,
+            user_id=user.id)
 
-        if not is_valid_leave_type(type):
-            raise GraphQLError('Invalid leave type')
+        rule_result = execute_day_off_validation_rule(day_off=day_off)
 
-        # TODO: We should probably allow submitting it but mark it as "violating policies",
-        #       so the approvers can decide whether to submit it. Change it while adding approvers functionality.
-        if start_date > end_date:
-            raise GraphQLError("Start date cannot be after the end date")
+        response = CreateDayOff(
+            errors=rule_result.errors,
+            warnings=rule_result.warnings,
+            notes=rule_result.notes
+        )
 
-        if ws_user.start_date > start_date:
-            raise GraphQLError("Day off dates should be after your Workspace start date")
-
-        if ws_user.get_worked_months() < 3 and type == LeaveTypes.VACATION_PAID.name:
-            raise GraphQLError("Paid vacations are only allowed after 3 months probation period")
-
-        if WorkspaceDate.get_work_days_count(workspace_id, start_date, end_date) > 10:
-            raise GraphQLError("Date range cannot exceed 10 business days")
-
-        if len(submitted_leaves) > 0:
-            raise GraphQLError("You've already submitted day offs within the given date range")
+        if rule_result.is_rejected:
+            return response
 
         try:
-            day_off = DayOff(
-                leave_type=type,
-                start_date=start_date,
-                end_date=end_date,
-                workspace_id=workspace_id,
-                comment=comment,
-                user_id=user.id)
             day_off.save_and_persist()
+            response.day_off = day_off
         except Exception as e:
             LOG.error(f'Could not add a day off. Error: {e}')
             raise GraphQLError('Could not add a day off')
 
-        return CreateDayOff(day_off=day_off, ok=True)
+        return response
 
 
 class ApproveDayOff(graphene.Mutation):

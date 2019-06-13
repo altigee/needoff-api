@@ -29,6 +29,10 @@ class Persistent:
         self.save()
         db.session.commit()
 
+    def merge_and_persist(self):
+        db.session.merge(self)
+        db.session.commit()
+
     def delete(self):
         db.session.delete(self)
 

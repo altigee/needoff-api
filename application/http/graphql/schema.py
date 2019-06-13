@@ -63,7 +63,7 @@ class Mutation(graphene.ObjectType):
     remove_user_role = workspace.RemoveUserRole.Field()
     add_workspace_date = workspace.AddWorkspaceDate.Field()
     remove_workspace_date = workspace.RemoveWorkspaceDate.Field()
-    set_workspace_policy = workspace.SetPolicy.Field()
+    set_workspace_rule = workspace.SetWorkspaceRule.Field()
 
 
 def create_schema(dump_to_file):

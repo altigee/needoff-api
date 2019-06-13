@@ -21,6 +21,11 @@ class WorkspaceUserRoles(Enum):
         return role in cls.__members__
 
 
+class WorkspaceRuleTypes(Enum):
+    BALANCE_CALCULATION = auto()
+    DAY_OFF_VALIDATION = auto()
+
+
 class WorkspaceModel(Base, Persistent):
     __tablename__ = 'workspace'
 
@@ -92,19 +97,17 @@ class WorkspaceDate(Base, Persistent):
 
         return result
 
-
-class WorkspacePolicy(Base, Persistent):
-    __tablename__ = 'workspace_policy'
-
-    ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False, primary_key=True)
-    max_paid_vacations_per_year = db.Column(db.Integer)
-    max_unpaid_vacations_per_year = db.Column(db.Integer)
-    max_sick_leaves_per_year = db.Column(db.Integer)
-
-
 class WorkspaceUserRole(Base, Persistent):
     __tablename__ = 'workspace_user_role'
 
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, primary_key=True)
     role = db.Column(db.Enum(WorkspaceUserRoles), default=WorkspaceUserRoles.MEMBER, nullable=False, primary_key=True)
+
+
+class WorkspaceRule(Base, Persistent):
+    __tablename__ = 'workspace_rule'
+
+    ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False, primary_key=True)
+    type = db.Column(db.Enum(WorkspaceRuleTypes), nullable=False, primary_key=True)
+    rule = db.Column(db.String, nullable=False)
