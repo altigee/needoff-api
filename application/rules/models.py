@@ -4,7 +4,8 @@ from application.workspace.models import (
     WorkspaceUser,
     WorkspaceDate,
     WorkspaceRule,
-    WorkspaceRuleTypes
+    WorkspaceRuleTypes,
+    WorkspaceUserRole
 )
 from application.balances.models import DayOff
 
@@ -96,10 +97,11 @@ class BalanceCalculationRulePayload:
 
 class DayOffValidationPayload:
 
-    def __init__(self, leave, user_start_date, balance):
+    def __init__(self, leave, user_start_date, balance, user_roles):
         self._leave = leave
         self._user_start_date = user_start_date
         self._balance = balance
+        self._user_roles = user_roles
 
         self._errors = []
         self._warnings = []
@@ -117,6 +119,10 @@ class DayOffValidationPayload:
     @property
     def balance(self):
         return self._balance
+
+    @property
+    def user_roles(self):
+        return self._user_roles
 
     @property
     def errors(self):
@@ -194,23 +200,24 @@ def execute_day_off_validation_rule(day_off):
     if not ws_rule:
         raise Exception('Day Off Validation rule has\'t been defined for workspace.')
 
-    # leaves = DayOff.query(). \
-    #     filter(DayOff.user_id == day_off.user_id). \
-    #     filter(DayOff.workspace_id == day_off.workspace_id). \
-    #     all()
-
     ws_user = WorkspaceUser.find(user_id=day_off.user_id, ws_id=day_off.workspace_id)
+
+    if not ws_user:
+        raise Exception('User is not added to the specified workspace')
+
+    ws_roles = WorkspaceUserRole.find_all(ws_id=day_off.workspace_id, user_id=day_off.user_id)
 
     rule_payload = DayOffValidationPayload(
         user_start_date=ws_user.start_date,
         leave=day_off,
-        balance=balance
+        balance=balance,
+        user_roles=list(map(lambda r: r.role, ws_roles))
     )
 
     intellect = Intellect()
     intellect.learn_policy(ws_rule.rule)
 
-    for leave_day in _leaves_to_leave_days([day]):
+    for leave_day in _leaves_to_leave_days([day_off]):
         intellect.learn_fact(leave_day)
 
     intellect.learn_fact(rule_payload)

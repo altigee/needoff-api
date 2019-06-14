@@ -1,5 +1,5 @@
 import graphene, logging
-from application.balances.models import DayOff
+from application.balances.models import DayOff, LeaveTypes
 from application.http.graphql import types
 from graphql import GraphQLError
 from application.workspace.models import WorkspaceUserRoles
@@ -34,7 +34,7 @@ class CreateDayOff(graphene.Mutation):
         user = current_user_in_workspace_or_error(ws_id=workspace_id)
 
         day_off = DayOff(
-            leave_type=type,
+            leave_type=LeaveTypes[type],
             start_date=start_date,
             end_date=end_date,
             workspace_id=workspace_id,

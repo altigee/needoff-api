@@ -25,7 +25,7 @@ rule calculate_sick_leaves:
     when:
         $leave_day := LeaveDay(leave.leave_type == LeaveTypes.SICK_LEAVE and is_official_holiday != True and date.weekday() < 5 and leave.approved_by_id != None)
     then:
-        attribute used_unpaid_leaves = used_unpaid_leaves + 1
+        attribute used_sick_leaves = used_sick_leaves + 1
 
 
 rule calculate_totals:
@@ -34,12 +34,11 @@ rule calculate_totals:
     then:
         attribute now = datetime.datetime.now()
         attribute worked_months = (now.year - $payload.start_date.year) * 12 + now.month - $payload.start_date.month
-        print("worked months = {0}".format(worked_months))
 
         modify $payload:
-            total_paid_leaves = 18 * worked_months // 12
-            total_unpaid_leaves = 30 * worked_months // 12
-            total_sick_leaves = 10 * worked_months // 12
+            total_paid_leaves = 18 * min(worked_months, 20) // 12
+            total_unpaid_leaves = 30 * min(worked_months, 12) // 12
+            total_sick_leaves = 10 * min(worked_months, 12) // 12
             left_paid_leaves = $payload.total_paid_leaves - used_paid_leaves
             left_unpaid_leaves = $payload.total_unpaid_leaves - used_unpaid_leaves
             left_sick_leaves = $payload.total_sick_leaves - used_sick_leaves
