@@ -140,7 +140,10 @@ def workspace_dates(_, info, workspace_id):
 @gql_jwt_required
 def team_calendar(_, info, workspace_id):
     user = current_user_in_workspace_or_error(ws_id=workspace_id)
-    return _DayOff.find_all(workspace_id=workspace_id)
+    return _DayOff.query(). \
+        filter(_DayOff.workspace_id == workspace_id). \
+        filter(_DayOff.approved_by_id != None). \
+        all()
 
 
 @gql_jwt_required
