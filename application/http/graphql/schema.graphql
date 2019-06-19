@@ -32,6 +32,9 @@ type Balance {
 type CreateDayOff {
   ok: Boolean
   dayOff: DayOff
+  errors: [String]
+  warnings: [String]
+  notes: [String]
 }
 
 type CreateWorkspace {
@@ -84,7 +87,7 @@ type Mutation {
   removeUserRole(role: String, userId: Int, wsId: Int): RemoveUserRole
   addWorkspaceDate(date: Date, isOfficialHoliday: Boolean, name: String, wsId: Int): AddWorkspaceDate
   removeWorkspaceDate(id: Int): RemoveWorkspaceDate
-  setWorkspacePolicy(maxPaidVacationsPerYear: Int, maxSickLeavesPerYear: Int, maxUnpaidVacationsPerYear: Int, wsId: Int): SetPolicy
+  setWorkspaceRule(rule: String, type: String, wsId: Int): SetWorkspaceRule
 }
 
 type Profile {
@@ -131,7 +134,7 @@ type RemoveWorkspaceDate {
   ok: Boolean
 }
 
-type SetPolicy {
+type SetWorkspaceRule {
   ok: Boolean
 }
 

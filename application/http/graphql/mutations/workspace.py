@@ -9,10 +9,10 @@ from application.workspace.models import (
     WorkspaceUser,
     WorkspaceInvitation,
     WorkspaceInvitationStatus,
-    WorkspacePolicy,
     WorkspaceDate,
     WorkspaceUserRole,
-    WorkspaceUserRoles
+    WorkspaceUserRoles,
+    WorkspaceRule
 )
 
 LOG = logging.getLogger("[mutations]")
@@ -99,34 +99,6 @@ class UpdateWorkspace(graphene.Mutation):
             LOG.error(f'Workspace update failed. Error: {e}')
             Persistent.rollback()
             raise GraphQLError('Workspace update failed.')
-
-class SetPolicy(graphene.Mutation):
-    class Arguments:
-        ws_id = graphene.Int()
-        max_paid_vacations_per_year = graphene.Int()
-        max_unpaid_vacations_per_year = graphene.Int()
-        max_sick_leaves_per_year = graphene.Int()
-
-    ok = graphene.Boolean()
-
-    @gql_jwt_required
-    def mutate(self, _, ws_id, max_paid_vacations_per_year, max_unpaid_vacations_per_year, max_sick_leaves_per_year):
-        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
-
-        try:
-            WorkspacePolicy(
-                ws_id=ws_id,
-                max_paid_vacations_per_year=max_paid_vacations_per_year,
-                max_unpaid_vacations_per_year=max_unpaid_vacations_per_year,
-                max_sick_leaves_per_year=max_sick_leaves_per_year
-            ).save_and_persist()
-
-            return SetPolicy(ok=True)
-        except Exception as e:
-            LOG.error(f'Workspace policy update failed. Error: {e}')
-            Persistent.rollback()
-            raise GraphQLError('Workspace policy update failed.')
-
 
 class AddMember(graphene.Mutation):
     class Arguments:
@@ -316,3 +288,21 @@ class RemoveWorkspaceDate(graphene.Mutation):
         except Exception as e:
             raise GraphQLError('Could not remove a holiday.')
 
+
+class SetWorkspaceRule(graphene.Mutation):
+    class Arguments:
+        ws_id = graphene.Int()
+        type = graphene.String()
+        rule = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @gql_jwt_required
+    def mutate(self, _, ws_id, type, rule):
+        check_role_or_error(ws_id=ws_id, role=WorkspaceUserRoles.ADMIN)
+
+        try:
+            WorkspaceRule(ws_id=ws_id, type=type, rule=rule).merge_and_persist()
+            return SetWorkspaceRule(ok=True)
+        except Exception as e:
+            raise GraphQLError('Could not create a rule.')

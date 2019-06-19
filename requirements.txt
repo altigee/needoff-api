@@ -9,3 +9,6 @@ passlib==1.7.1
 graphene==2.1.3
 Flask-GraphQL==2.0
 graphene-sqlalchemy==2.1.2
+
+git+https://github.com/altigee/antlr-python3-runtime-3.1.3.git#egg=antlr_python_runtime
+git+https://github.com/altigee/Intellect.git#egg=intellect
