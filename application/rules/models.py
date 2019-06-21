@@ -1,4 +1,5 @@
 import datetime
+import pickle
 from intellect.Intellect import Intellect
 from application.workspace.models import (
     WorkspaceUser,
@@ -144,6 +145,17 @@ class DayOffValidationPayload:
     def is_rejected(self, val):
         self._is_rejected = val
 
+def _get_rule_node(ws_id, type):
+    ws_rule = WorkspaceRule.find(ws_id=ws_id, type=type)
+
+    if not ws_rule:
+        raise Exception(f'{type} rule has\'t been defined for workspace.')
+
+    if not ws_rule.node:
+        return Intellect().learn_policy(ws_rule.rule)
+
+    return pickle.loads(ws_rule.node)
+
 
 def _leaves_to_leave_days(leaves):
     for leave in leaves:
@@ -165,10 +177,6 @@ def _leaves_to_leave_days(leaves):
 
 # TODO: consider moving execution methods to classes
 def execute_balance_calculation_rule(ws_id, user_id):
-    ws_rule = WorkspaceRule.find(ws_id=ws_id, type=WorkspaceRuleTypes.BALANCE_CALCULATION)
-
-    if not ws_rule:
-        raise Exception('Balance Calculation rule has\'t been defined for workspace.')
 
     leaves = DayOff.query(). \
         filter(DayOff.user_id == user_id). \
@@ -179,13 +187,16 @@ def execute_balance_calculation_rule(ws_id, user_id):
 
     rule_payload = BalanceCalculationRulePayload(start_date=ws_user.start_date)
 
+    node = _get_rule_node(ws_id=ws_id, type=WorkspaceRuleTypes.BALANCE_CALCULATION)
+
     intellect = Intellect()
-    intellect.learn_policy(ws_rule.rule)
+    intellect.policy.append_child(node)
 
     for leave_day in _leaves_to_leave_days(leaves):
         intellect.learn_fact(leave_day)
 
     intellect.learn_fact(rule_payload)
+
     intellect.reason()
 
     return rule_payload
@@ -194,11 +205,6 @@ def execute_balance_calculation_rule(ws_id, user_id):
 def execute_day_off_validation_rule(day_off):
 
     balance = execute_balance_calculation_rule(ws_id=day_off.workspace_id, user_id=day_off.user_id)
-
-    ws_rule = WorkspaceRule.find(ws_id=day_off.workspace_id, type=WorkspaceRuleTypes.DAY_OFF_VALIDATION)
-
-    if not ws_rule:
-        raise Exception('Day Off Validation rule has\'t been defined for workspace.')
 
     ws_user = WorkspaceUser.find(user_id=day_off.user_id, ws_id=day_off.workspace_id)
 
@@ -215,12 +221,13 @@ def execute_day_off_validation_rule(day_off):
     )
 
     intellect = Intellect()
-    intellect.learn_policy(ws_rule.rule)
+    intellect.policy.append_child(_get_rule_node(ws_id=day_off.workspace_id, type=WorkspaceRuleTypes.DAY_OFF_VALIDATION))
 
     for leave_day in _leaves_to_leave_days([day_off]):
         intellect.learn_fact(leave_day)
 
     intellect.learn_fact(rule_payload)
+
     intellect.reason()
 
     return rule_payload
