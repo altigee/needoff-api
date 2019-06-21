@@ -2,6 +2,8 @@ import datetime
 from application.shared.database import db, Base, Persistent
 import uuid
 from enum import Enum, auto
+import pickle
+from intellect.Intellect import Intellect
 
 
 class WorkspaceInvitationStatus(Enum):
@@ -111,3 +113,10 @@ class WorkspaceRule(Base, Persistent):
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), nullable=False, primary_key=True)
     type = db.Column(db.Enum(WorkspaceRuleTypes), nullable=False, primary_key=True)
     rule = db.Column(db.String, nullable=False)
+    node = db.Column(db.BLOB, nullable=True)
+
+    def __init__(self, ws_id, type, rule):
+        self.ws_id = ws_id
+        self.type = type
+        self.rule = rule
+        self.node = pickle.dumps(Intellect().learn_policy(rule))
