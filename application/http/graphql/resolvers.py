@@ -9,6 +9,7 @@ from application.rules.models import execute_balance_calculation_rule
 
 from application.workspace.models import (
     WorkspaceModel as _WorkspaceModel,
+    WorkspaceUser,
     WorkspaceInvitation,
     WorkspaceDate,
     WorkspaceUserRole,
@@ -90,6 +91,11 @@ def workspace_invitations(_, info, workspace_id):
     return db.session.query(WorkspaceInvitation).filter_by(ws_id=workspace_id).order_by(
         WorkspaceInvitation.status.desc()).all()
 
+
+@gql_jwt_required
+def workspace_members(_, info, workspace_id):
+    _ = current_user_in_workspace_or_error(ws_id=workspace_id)
+    return WorkspaceUser.find_all(ws_id=workspace_id)
 
 @gql_jwt_required
 def workspace_dates(_, info, workspace_id):

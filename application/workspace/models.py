@@ -53,6 +53,8 @@ class WorkspaceUser(Base, Persistent):
     ws_id = db.Column(db.Integer, db.ForeignKey('workspace.id'), primary_key=True)
     start_date = db.Column(db.Date, default=datetime.datetime.now(), nullable=False)
 
+    profile = db.relationship('UserProfile', primaryjoin='foreign(UserProfile.user_id) == WorkspaceUser.user_id', uselist=False, viewonly=True)
+
     def get_worked_months(self):
         now = datetime.datetime.now()
         return (now.year - self.start_date.year) * 12 + now.month - self.start_date.month

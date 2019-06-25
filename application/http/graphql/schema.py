@@ -38,6 +38,10 @@ class Query(graphene.ObjectType):
                                           workspace_id=graphene.Int(required=True),
                                           resolver=resolvers.workspace_invitations)
 
+    workspace_members = graphene.List(types.WorkspaceUser,
+                                      workspace_id=graphene.Int(required=True),
+                                      resolver=resolvers.workspace_members)
+
     workspace_dates = graphene.List(types.WorkspaceDate,
                                     workspace_id=graphene.Int(required=True),
                                     resolver=resolvers.workspace_dates)
