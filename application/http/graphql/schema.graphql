@@ -110,6 +110,7 @@ type Query {
   workspaceById(workspaceId: Int!): Workspace
   workspaceOwner(workspaceId: Int!): Profile
   workspaceInvitations(workspaceId: Int!): [WorkspaceInvitation]
+  workspaceMembers(workspaceId: Int!): [WorkspaceUser]
   workspaceDates(workspaceId: Int!): [WorkspaceDate]
   teamCalendar(workspaceId: Int!): [DayOff]
   dayOffsForApproval(workspaceId: Int!): [DayOff]
@@ -191,4 +192,5 @@ type WorkspaceUser {
   userId: ID!
   wsId: ID!
   startDate: String!
+  profile: Profile
 }

@@ -103,7 +103,7 @@ class Register(graphene.Mutation):
                         processed_ws_ids.add(inv.ws_id)
                         WorkspaceUser(user_id=new_user.id,
                                       ws_id=inv.ws_id,
-                                      start_date=datetime.datetime.now()
+                                      start_date=inv.start_date
                                       ).save()
 
                         WorkspaceUserRole(ws_id=inv.ws_id,
