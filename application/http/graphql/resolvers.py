@@ -50,9 +50,17 @@ def my_balance(_, info, workspace_id):
 
 
 @gql_jwt_required
-def balance_by_user(_, info, email):
-    user = current_user_or_error()
-    return _Balance.find_by_user_id(user.id)
+def balance_by_user(_, info, workspace_id, user_id):
+    rule_result = execute_balance_calculation_rule(ws_id=workspace_id, user_id=user_id)
+
+    return Balance(
+        left_paid_leaves=rule_result.left_paid_leaves,
+        left_unpaid_leaves=rule_result.left_unpaid_leaves,
+        left_sick_leaves=rule_result.left_sick_leaves,
+        total_paid_leaves=rule_result.total_paid_leaves,
+        total_unpaid_leaves=rule_result.total_unpaid_leaves,
+        total_sick_leaves=rule_result.total_sick_leaves
+    )
 
 
 @gql_jwt_required
@@ -75,7 +83,6 @@ def workspace_by_id(_, info, workspace_id):
 
 @gql_jwt_required
 def workspace_owner(_, info, workspace_id):
-    user = current_user_in_workspace_or_error(ws_id=workspace_id)
     owner_role = WorkspaceUserRole.find(ws_id=workspace_id, role=WorkspaceUserRoles.OWNER)
     if owner_role is None:
         raise GraphQLError("Failed to load workspace owner")
@@ -94,8 +101,8 @@ def workspace_invitations(_, info, workspace_id):
 
 @gql_jwt_required
 def workspace_members(_, info, workspace_id):
-    _ = current_user_in_workspace_or_error(ws_id=workspace_id)
     return WorkspaceUser.find_all(ws_id=workspace_id)
+
 
 @gql_jwt_required
 def workspace_dates(_, info, workspace_id):
