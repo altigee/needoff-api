@@ -104,7 +104,7 @@ type Query {
   userByName(email: String!): User
   myLeaves(workspaceId: Int!): [DayOff]
   myBalance(workspaceId: Int!): Balance
-  balanceByUser(email: String!): [Balance]
+  balanceByUser(userId: Int!, workspaceId: Int!): Balance
   profile: Profile
   myWorkspaces: [Workspace]
   workspaceById(workspaceId: Int!): Workspace
@@ -193,4 +193,5 @@ type WorkspaceUser {
   wsId: ID!
   startDate: String!
   profile: Profile
+  balance: Balance
 }
