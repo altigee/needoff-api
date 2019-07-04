@@ -51,7 +51,7 @@ class WorkspaceUser(SQLAlchemyObjectType):
         model = WorkspaceUserModel
 
     def resolve_balance(self, _):
-        rule_result = execute_balance_calculation_rule(ws_id=1, user_id=self.user_id)
+        rule_result = execute_balance_calculation_rule(ws_id=self.ws_id, user_id=self.user_id)
 
         return Balance(
             left_paid_leaves=rule_result.left_paid_leaves,
