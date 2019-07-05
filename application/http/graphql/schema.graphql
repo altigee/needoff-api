@@ -103,6 +103,7 @@ type Profile {
 type Query {
   userByName(email: String!): User
   myLeaves(workspaceId: Int!): [DayOff]
+  userLeaves(workspaceId: Int!, userId: Int!): [DayOff]
   myBalance(workspaceId: Int!): Balance
   balanceByUser(userId: Int!, workspaceId: Int!): Balance
   profile: Profile

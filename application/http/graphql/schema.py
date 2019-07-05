@@ -13,6 +13,11 @@ class Query(graphene.ObjectType):
                               workspace_id=graphene.Int(required=True),
                               resolver=resolvers.my_leaves)
 
+    user_leaves = graphene.List(types.DayOff,
+                                workspace_id=graphene.Int(required=True),
+                                user_id=graphene.Int(required=True),
+                                resolver=resolvers.user_leaves)
+
     my_balance = graphene.Field(types.Balance,
                                 workspace_id=graphene.Int(required=True),
                                 resolver=resolvers.my_balance)

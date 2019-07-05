@@ -35,6 +35,11 @@ def my_leaves(_, info, workspace_id):
 
 
 @gql_jwt_required
+def user_leaves(_, info, workspace_id, user_id):
+    return _DayOff.find_all(workspace_id=workspace_id, user_id=user_id)
+
+
+@gql_jwt_required
 def my_balance(_, info, workspace_id):
     user = current_user_in_workspace_or_error(ws_id=workspace_id)
     rule_result = execute_balance_calculation_rule(ws_id=workspace_id, user_id=user.id)
