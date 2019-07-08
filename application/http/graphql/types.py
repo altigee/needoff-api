@@ -10,6 +10,7 @@ from application.workspace.models import (
     WorkspaceDate as WorkspaceDateModel,
     WorkspaceUser as WorkspaceUserModel
 )
+from application.rules.models import execute_balance_calculation_rule
 
 
 class User(SQLAlchemyObjectType):
@@ -44,8 +45,22 @@ class Workspace(SQLAlchemyObjectType):
 
 
 class WorkspaceUser(SQLAlchemyObjectType):
+    balance = graphene.Field(lambda: Balance)
+
     class Meta:
         model = WorkspaceUserModel
+
+    def resolve_balance(self, _):
+        rule_result = execute_balance_calculation_rule(ws_id=self.ws_id, user_id=self.user_id)
+
+        return Balance(
+            left_paid_leaves=rule_result.left_paid_leaves,
+            left_unpaid_leaves=rule_result.left_unpaid_leaves,
+            left_sick_leaves=rule_result.left_sick_leaves,
+            total_paid_leaves=rule_result.total_paid_leaves,
+            total_unpaid_leaves=rule_result.total_unpaid_leaves,
+            total_sick_leaves=rule_result.total_sick_leaves
+        )
 
 
 class WorkspaceInvitation(SQLAlchemyObjectType):

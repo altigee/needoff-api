@@ -1,4 +1,5 @@
 from flask import Flask, request
+from flask_cors import CORS
 from application.shared.database import db, Base
 from application.jwt import jwt
 from application.auth.v1_controller import auth_v1
@@ -31,6 +32,7 @@ app.register_blueprint(auth_v1)
 app.register_blueprint(health_v1)
 app.register_blueprint(httperrors)
 
+CORS(app, resources={"/graphql": {"origins": "*"}})
 graphql.init_graphql(
     jwt_enabled=app.config['GRAPHQL_JWT_ENABLED'],
     dump_schema_enabled=app.config['GRAPHQL_SCHEMA_DUMP_ENABLED']

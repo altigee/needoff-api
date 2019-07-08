@@ -17,9 +17,10 @@ class Query(graphene.ObjectType):
                                 workspace_id=graphene.Int(required=True),
                                 resolver=resolvers.my_balance)
 
-    balance_by_user = graphene.List(types.Balance,
-                                    email=graphene.String(required=True),
-                                    resolver=resolvers.balance_by_user)
+    balance_by_user = graphene.Field(types.Balance,
+                                     user_id=graphene.Int(required=True),
+                                     workspace_id=graphene.Int(required=True),
+                                     resolver=resolvers.balance_by_user)
 
     profile = graphene.Field(types.Profile,
                              resolver=resolvers.profile)
