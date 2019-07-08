@@ -1,9 +1,13 @@
 import graphene, datetime, logging
 from application.auth.models import User as _UserModel
-from application.users.models import UserProfile
+from application.users.models import UserProfile, UserDevice
 from graphql import GraphQLError
 from application.shared.database import db, Persistent
 
+from application.http.graphql.util import (
+    gql_jwt_required,
+    current_user_or_error
+)
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -17,8 +21,46 @@ from application.workspace.models import (
     WorkspaceUserRoles,
 )
 
-
 LOG = logging.getLogger("[mutations]")
+
+
+class SaveUserDevice(graphene.Mutation):
+    class Arguments:
+        token = graphene.String()
+
+    user_id = graphene.Int()
+    token = graphene.String()
+
+    @gql_jwt_required
+    def mutate(self, _, token):
+        try:
+            user = current_user_or_error()
+            if user is not None and token is not None:
+                UserDevice.query().filter_by(device_token=token).delete()
+                ud = UserDevice(user_id=user.id, device_token=token)
+                ud.save_and_persist()
+                return SaveUserDevice(user_id=ud.user_id, token=ud.device_token)
+        except Exception as e:
+            print(e)
+            raise GraphQLError('Failed to save device token')
+
+
+class RemoveUserDevice(graphene.Mutation):
+    class Arguments:
+        token = graphene.String()
+
+    user_id = graphene.Int()
+    token = graphene.String()
+
+    @gql_jwt_required
+    def mutate(self, _, token):
+        try:
+            user = current_user_or_error()
+            if user is not None and token is not None:
+                UserDevice.find(device_token=token).delete_and_persist()
+                return RemoveUserDevice(user_id=user.id, token=token)
+        except Exception as e:
+            raise GraphQLError('Failed to delete device token')
 
 
 class Login(graphene.Mutation):

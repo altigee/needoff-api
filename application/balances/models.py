@@ -1,7 +1,6 @@
 from application.shared.database import db, Base, Persistent
 from enum import Enum, auto
 
-
 BALANCE_SICK_LEAVE = "BALANCE_SICK_LEAVE"
 BALANCE_VACATION = "BALANCE_VACATION"
 _valid_balances = [BALANCE_SICK_LEAVE, BALANCE_VACATION]
@@ -12,6 +11,18 @@ class LeaveTypes(Enum):
     VACATION_PAID = auto()
     VACATION_UNPAID = auto()
     WFH = auto()
+
+
+LeaveTypesLabels = {
+    'SICK_LEAVE': 'Sick Leave',
+    LeaveTypes.SICK_LEAVE: 'Sick Leave',
+    'VACATION_PAID': 'Vacation',
+    LeaveTypes.VACATION_PAID: 'Vacation',
+    'VACATION_UNPAID': 'Day Off',
+    LeaveTypes.VACATION_UNPAID: 'Day Off',
+    'WFH': 'WFH',
+    LeaveTypes.WFH: 'WFH'
+}
 
 
 def is_valid_leave_type(leave_type):

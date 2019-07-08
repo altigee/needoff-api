@@ -56,6 +56,8 @@ class Query(graphene.ObjectType):
 
 class Mutation(graphene.ObjectType):
     login = user.Login.Field()
+    save_user_device = user.SaveUserDevice.Field()
+    remove_user_device = user.RemoveUserDevice.Field()
     register = user.Register.Field()
     create_day_off = day_off.CreateDayOff.Field()
     approve_day_off = day_off.ApproveDayOff.Field()
