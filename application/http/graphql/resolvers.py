@@ -128,3 +128,17 @@ def day_offs_for_approval(_, info, workspace_id):
         filter(_DayOff.workspace_id == workspace_id). \
         filter(_DayOff.approved_by_id == None). \
         all()
+
+@gql_jwt_required
+def day_offs_for_approval(_, info, workspace_id):
+    check_role_or_error(ws_id=workspace_id, role=WorkspaceUserRoles.APPROVER)
+
+    return _DayOff.query(). \
+        filter(_DayOff.workspace_id == workspace_id). \
+        filter(_DayOff.approved_by_id == None). \
+        all()
+
+@gql_jwt_required
+def workspace_user_roles(_, info, workspace_id, user_id):
+
+    return WorkspaceUserRole.find_all(ws_id=workspace_id, user_id=user_id)

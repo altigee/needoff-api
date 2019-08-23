@@ -5,7 +5,7 @@ from application.auth.models import User as UserModel
 from application.balances.models import DayOff as DayOffModel
 from application.users.models import UserProfile as ProfileModel
 from application.workspace.models import (
-    WorkspaceModel,
+    WorkspaceModel, WorkspaceUserRole,
     WorkspaceInvitation as WorkspaceInvitationModel,
     WorkspaceDate as WorkspaceDateModel,
     WorkspaceUser as WorkspaceUserModel
@@ -71,3 +71,8 @@ class WorkspaceInvitation(SQLAlchemyObjectType):
 class WorkspaceDate(SQLAlchemyObjectType):
     class Meta:
         model = WorkspaceDateModel
+
+
+class WorkspaceUserRole(SQLAlchemyObjectType):
+    class Meta:
+        model = WorkspaceUserRole

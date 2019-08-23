@@ -116,6 +116,7 @@ type Query {
   workspaceDates(workspaceId: Int!): [WorkspaceDate]
   teamCalendar(workspaceId: Int!): [DayOff]
   dayOffsForApproval(workspaceId: Int!): [DayOff]
+  workspaceUserRoles(userId: Int!, workspaceId: Int!): [WorkspaceUserRole]
 }
 
 type Register {
@@ -206,4 +207,17 @@ type WorkspaceUser {
   startDate: String!
   profile: Profile
   balance: Balance
+}
+
+type WorkspaceUserRole {
+  wsId: ID!
+  userId: ID!
+  role: WorkspaceUserRoles!
+}
+
+enum WorkspaceUserRoles {
+  MEMBER
+  APPROVER
+  ADMIN
+  OWNER
 }

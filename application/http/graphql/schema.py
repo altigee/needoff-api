@@ -54,6 +54,10 @@ class Query(graphene.ObjectType):
                                           workspace_id=graphene.Int(required=True),
                                           resolver=resolvers.day_offs_for_approval)
 
+    workspace_user_roles = graphene.List(types.WorkspaceUserRole,
+                                         user_id=graphene.Int(required=True),
+                                         workspace_id=graphene.Int(required=True),
+                                         resolver=resolvers.workspace_user_roles)
 
 class Mutation(graphene.ObjectType):
     login = user.Login.Field()
