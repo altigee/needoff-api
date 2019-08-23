@@ -76,6 +76,8 @@ type Login {
 
 type Mutation {
   login(email: String, password: String): Login
+  saveUserDevice(token: String): SaveUserDevice
+  removeUserDevice(token: String): RemoveUserDevice
   register(email: String, password: String, userData: UserData): Register
   createDayOff(comment: String, endDate: Date, startDate: Date, type: String, userId: Int, workspaceId: Int): CreateDayOff
   approveDayOff(dayOffId: Int): ApproveDayOff
@@ -131,12 +133,22 @@ type RemoveMember {
   ok: Boolean
 }
 
+type RemoveUserDevice {
+  userId: Int
+  token: String
+}
+
 type RemoveUserRole {
   ok: Boolean
 }
 
 type RemoveWorkspaceDate {
   ok: Boolean
+}
+
+type SaveUserDevice {
+  userId: Int
+  token: String
 }
 
 type SetWorkspaceRule {

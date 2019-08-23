@@ -14,3 +14,9 @@ class UserProfile(Base, Persistent):
     @classmethod
     def find_by_user_id(cls, user_id):
         return cls.find(user_id=user_id)
+
+class UserDevice(Base, Persistent):
+    __tablename__ = 'user_device'
+
+    user_id = db.Column('user_id', db.Integer, db.ForeignKey('user.id'), nullable=False)
+    device_token = db.Column('device_token', db.String, primary_key=True, nullable=False)
