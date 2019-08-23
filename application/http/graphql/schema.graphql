@@ -18,6 +18,7 @@ type AddWorkspaceDate {
 
 type ApproveDayOff {
   ok: Boolean
+  dayOff: DayOff
 }
 
 type Balance {
@@ -76,7 +77,7 @@ type Login {
 type Mutation {
   login(email: String, password: String): Login
   register(email: String, password: String, userData: UserData): Register
-  createDayOff(comment: String, endDate: Date, startDate: Date, type: String, workspaceId: Int): CreateDayOff
+  createDayOff(comment: String, endDate: Date, startDate: Date, type: String, userId: Int, workspaceId: Int): CreateDayOff
   approveDayOff(dayOffId: Int): ApproveDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
   updateWorkspace(description: String, name: String, wsId: Int): UpdateWorkspace
@@ -112,9 +113,11 @@ type Query {
   workspaceOwner(workspaceId: Int!): Profile
   workspaceInvitations(workspaceId: Int!): [WorkspaceInvitation]
   workspaceMembers(workspaceId: Int!): [WorkspaceUser]
+  workspaceMember(workspaceId: Int!, userId: Int!): WorkspaceUser
   workspaceDates(workspaceId: Int!): [WorkspaceDate]
   teamCalendar(workspaceId: Int!): [DayOff]
   dayOffsForApproval(workspaceId: Int!): [DayOff]
+  dayOffs(workspaceId: Int!): [DayOff]
 }
 
 type Register {
