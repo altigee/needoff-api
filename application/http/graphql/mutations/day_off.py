@@ -1,6 +1,7 @@
 import graphene, logging
 from application.users.models import UserDevice, UserProfile
 from application.balances.models import DayOff, LeaveTypes, LeaveTypesLabels
+from application.auth.models import User
 from application.http.graphql import types
 from graphql import GraphQLError
 from application.workspace.models import WorkspaceUserRoles, WorkspaceUserRole
@@ -22,6 +23,7 @@ class CreateDayOff(graphene.Mutation):
         start_date = graphene.Date()
         end_date = graphene.Date()
         workspace_id = graphene.Int()
+        user_id = graphene.Int()
         comment = graphene.String()
 
     ok = graphene.Boolean()
@@ -31,9 +33,10 @@ class CreateDayOff(graphene.Mutation):
     notes = graphene.List(of_type=graphene.String)
 
     @gql_jwt_required
-    def mutate(self, _, type, start_date, end_date, workspace_id, comment):
+    def mutate(self, _, type, start_date, end_date, workspace_id, user_id, comment):
 
-        user = current_user_in_workspace_or_error(ws_id=workspace_id)
+        user_id = user_id or current_user_in_workspace_or_error(ws_id=workspace_id).id
+        user = User.find_by_id(user_id)
 
         day_off = DayOff(
             leave_type=LeaveTypes[type],
@@ -85,6 +88,7 @@ class ApproveDayOff(graphene.Mutation):
         day_off_id = graphene.Int()
 
     ok = graphene.Boolean()
+    day_off = graphene.Field(lambda: types.DayOff)
 
     @gql_jwt_required
     def mutate(self, _, day_off_id):

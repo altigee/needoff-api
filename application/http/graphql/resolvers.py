@@ -35,6 +35,11 @@ def my_leaves(_, info, workspace_id):
 
 
 @gql_jwt_required
+def user_leaves(_, info, workspace_id, user_id):
+    return _DayOff.find_all(workspace_id=workspace_id, user_id=user_id)
+
+
+@gql_jwt_required
 def my_balance(_, info, workspace_id):
     user = current_user_in_workspace_or_error(ws_id=workspace_id)
     rule_result = execute_balance_calculation_rule(ws_id=workspace_id, user_id=user.id)
@@ -105,6 +110,11 @@ def workspace_members(_, info, workspace_id):
 
 
 @gql_jwt_required
+def workspace_member(_, info, workspace_id, user_id):
+    return WorkspaceUser.find(ws_id=workspace_id, user_id=user_id)
+
+
+@gql_jwt_required
 def workspace_dates(_, info, workspace_id):
     current_user_in_workspace_or_error(ws_id=workspace_id)
 
@@ -117,6 +127,14 @@ def team_calendar(_, info, workspace_id):
     return _DayOff.query(). \
         filter(_DayOff.workspace_id == workspace_id). \
         filter(_DayOff.approved_by_id != None). \
+        all()
+
+
+@gql_jwt_required
+def day_offs(_, info, workspace_id):
+    user = current_user_in_workspace_or_error(ws_id=workspace_id)
+    return _DayOff.query(). \
+        filter(_DayOff.workspace_id == workspace_id). \
         all()
 
 

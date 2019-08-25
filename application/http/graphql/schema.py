@@ -13,6 +13,11 @@ class Query(graphene.ObjectType):
                               workspace_id=graphene.Int(required=True),
                               resolver=resolvers.my_leaves)
 
+    user_leaves = graphene.List(types.DayOff,
+                                workspace_id=graphene.Int(required=True),
+                                user_id=graphene.Int(required=True),
+                                resolver=resolvers.user_leaves)
+
     my_balance = graphene.Field(types.Balance,
                                 workspace_id=graphene.Int(required=True),
                                 resolver=resolvers.my_balance)
@@ -43,6 +48,11 @@ class Query(graphene.ObjectType):
                                       workspace_id=graphene.Int(required=True),
                                       resolver=resolvers.workspace_members)
 
+    workspace_member = graphene.Field(types.WorkspaceUser,
+                                     workspace_id=graphene.Int(required=True),
+                                     user_id=graphene.Int(required=True),
+                                     resolver=resolvers.workspace_member)
+
     workspace_dates = graphene.List(types.WorkspaceDate,
                                     workspace_id=graphene.Int(required=True),
                                     resolver=resolvers.workspace_dates)
@@ -53,6 +63,10 @@ class Query(graphene.ObjectType):
     day_offs_for_approval = graphene.List(types.DayOff,
                                           workspace_id=graphene.Int(required=True),
                                           resolver=resolvers.day_offs_for_approval)
+
+    day_offs = graphene.List(types.DayOff,
+                             workspace_id=graphene.Int(required=True),
+                             resolver=resolvers.day_offs)
 
 
 class Mutation(graphene.ObjectType):
