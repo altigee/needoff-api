@@ -30,6 +30,11 @@ type Balance {
   totalSickLeaves: Int
 }
 
+type CancelDayOff {
+  ok: Boolean
+  dayOff: DayOff
+}
+
 type CreateDayOff {
   ok: Boolean
   dayOff: DayOff
@@ -81,6 +86,7 @@ type Mutation {
   register(email: String, password: String, userData: UserData): Register
   createDayOff(comment: String, endDate: Date, startDate: Date, type: String, userId: Int, workspaceId: Int): CreateDayOff
   approveDayOff(dayOffId: Int): ApproveDayOff
+  cancelDayOff(dayOffId: Int): CancelDayOff
   createWorkspace(description: String, members: [String], name: String): CreateWorkspace
   updateWorkspace(description: String, name: String, wsId: Int): UpdateWorkspace
   addWorkspaceMember(email: String, startDate: Date, wsId: Int): AddMember

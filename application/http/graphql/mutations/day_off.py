@@ -121,3 +121,28 @@ class ApproveDayOff(graphene.Mutation):
         except Exception as e:
             LOG.error(f'Could not approve day off. Error: {e}')
             raise GraphQLError('Could not approve day off')
+
+
+class CancelDayOff(graphene.Mutation):
+    class Arguments:
+        day_off_id = graphene.Int()
+
+    ok = graphene.Boolean()
+    day_off = graphene.Field(lambda: types.DayOff)
+
+    @gql_jwt_required
+    def mutate(self, _, day_off_id):
+        user = current_user_or_error()
+        day_off = DayOff.find(id=day_off_id)
+        if not day_off:
+            raise GraphQLError("Could not find a day off")
+
+        if user.id != day_off.user_id:
+            check_role_or_error(ws_id=day_off.workspace_id, role=WorkspaceUserRoles.APPROVER)
+
+        try:
+            day_off.delete_and_persist()
+            return CancelDayOff(ok=True)
+        except Exception as e:
+            LOG.error(f'Could not cancel day off. Error: {e}')
+            raise GraphQLError('Could not cancel day off')
